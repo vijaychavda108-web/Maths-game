@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>વજનના એકમો ગોઠવો</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mukta Vaani', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header {
+            background-color: #ff6b6b;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .game-container {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .instruction {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px dashed #ffc107;
+        }
+
+        .question-box {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2b2b2b;
+            margin-bottom: 20px;
+        }
+
+        .drop-area-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .drop-zone {
+            width: 180px;
+            height: 100px;
+            border: 4px dashed #4ecdc4;
+            border-radius: 15px;
+            background-color: #f7fff7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: #ccc;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.hovered {
+            background-color: #caffbf;
+            border-color: #2ecc71;
+            transform: scale(1.05);
+        }
+
+        .options-area {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            min-height: 120px;
+        }
+
+        /* વજનિયાની ડિઝાઇન (Iron Weight Design) */
+        .weight {
+            background: linear-gradient(to bottom, #4a4a4a, #2b2b2b);
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 20px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 3px 5px 10px rgba(0,0,0,0.4);
+            user-select: none;
+            transition: transform 0.2s;
+            min-width: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .weight::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 15px;
+            border: 4px solid #333;
+            border-bottom: none;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .weight:hover {
+            transform: translateY(-5px);
+        }
+
+        .weight.selected {
+            outline: 4px solid #ffcc00;
+            transform: scale(1.1);
+        }
+
+        .feedback {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 40px;
+            transition: all 0.3s;
+        }
+
+        .success { color: #2ecc71; animation: popIn 0.5s; }
+        .error { color: #e74c3c; animation: shake 0.5s; }
+
+        .btn-next {
+            background-color: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background 0.3s;
+        }
+
+        .btn-next:hover {
+            background-color: #45b7aa;
+        }
+
+        .score-board {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        footer {
+            background-color: #2b2b2b;
+            color: #f1f1f1;
+            width: 100%;
+            text-align: center;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+        }
+
+        @media (max-width: 500px) {
+            .weight { font-size: 16px; padding: 15px 10px; min-width: 100px; }
+            .drop-zone { width: 150px; height: 90px; }
+            .question-box { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        ⚖️ વજનના એકમો ગોઠવો ⚖️
+    </header>
+
+    <div class="game-container">
+        <div class="score-board">પ્રશ્ન: <span id="current-q">1</span> / 10</div>
+        
+        <div class="instruction">
+            સૂચના: નીચે આપેલા વજનિયામાંથી સાચું વજન પસંદ કરી તેને ખેંચીને (Drag) ખાલી બોક્સમાં મૂકો. (અથવા પહેલા વજનિયા પર ક્લિક કરો અને પછી ખાલી બોક્સ પર ક્લિક કરો)
+        </div>
+
+        <div class="question-box" id="question-text">પ્રશ્ન લોડ થઈ રહ્યો છે...</div>
+
+        <div class="drop-area-container">
+            <div class="drop-zone" id="drop-zone">અહીં મૂકો</div>
+        </div>
+
+        <div class="options-area" id="options-area">
+            </div>
+
+        <div class="feedback" id="feedback-msg"></div>
+        
+        <button class="btn-next" id="next-btn" onclick="nextQuestion()">આગળનો પ્રશ્ન ➡️</button>
+    </div>
+
+    <footer>
+        created by વિજયકુમાર ચાવડા | શાળા: દાદાના મુવાડા પ્રાથમિક શાળા
+    </footer>
+
+    <script>
+        // ગેમના 10 પ્રશ્નો અને તેના જવાબો
+        const questionsData = [
+            { q: "૧ કિલોગ્રામ બરાબર કેટલા ગ્રામ?", correct: "૧૦૦૦ ગ્રામ", options: ["૧૦૦ ગ્રામ", "૧૦૦૦ ગ્રામ", "૫૦૦ ગ્રામ"] },
+            { q: "૫૦૦ ગ્રામ + ૫૦૦ ગ્રામ બરાબર શું થાય?", correct: "૧ કિલોગ્રામ", options: ["૧ કિલોગ્રામ", "૨ કિલોગ્રામ", "૧૦૦ ગ્રામ"] },
+            { q: "૨ કિલોગ્રામ વજન માટે કયું વજનિયું સાચું છે?", correct: "૨૦૦૦ ગ્રામ", options: ["૨૦૦ ગ્રામ", "૨૦૦૦ ગ્રામ", "૨૦ ગ્રામ"] },
+            { q: "અડધો કિલોગ્રામ એટલે કેટલા ગ્રામ?", correct: "૫૦૦ ગ્રામ", options: ["૨૫૦ ગ્રામ", "૫૦૦ ગ્રામ", "૧૦૦૦ ગ્રામ"] },
+            { q: "૨૫૦ ગ્રામ + ૨૫૦ ગ્રામ બરાબર કેટલા ગ્રામ?", correct: "૫૦૦ ગ્રામ", options: ["૧૦૦૦ ગ્રામ", "૫૦૦ ગ્રામ", "૭૫૦ ગ્રામ"] },
+            { q: "૧૫૦૦ ગ્રામ એટલે શું?", correct: "૧.૫ કિલોગ્રામ", options: ["૧ કિલોગ્રામ", "૧.૫ કિલોગ્રામ", "૨ કિલોગ્રામ"] },
+            { q: "પા (૧/૪) કિલોગ્રામ એટલે કેટલા ગ્રામ?", correct: "૨૫૦ ગ્રામ", options: ["૫૦૦ ગ્રામ", "૧૦૦ ગ્રામ", "૨૫૦ ગ્રામ"] },
+            { q: "૩ કિલોગ્રામ બરાબર કેટલા ગ્રામ?", correct: "૩૦૦૦ ગ્રામ", options: ["૩૦૦ ગ્રામ", "૩૦૦૦ ગ્રામ", "૧૩૦૦ ગ્રામ"] },
+            { q: "૧ કિલો અને ૫૦૦ ગ્રામ એટલે કુલ કેટલા ગ્રામ?", correct: "૧૫૦૦ ગ્રામ", options: ["૧૫૦૦ ગ્રામ", "૧૦૫૦ ગ્રામ", "૫૦૦૦ ગ્રામ"] },
+            { q: "૫ કિલોગ્રામ બરાબર કેટલા ગ્રામ?", correct: "૫૦૦૦ ગ્રામ", options: ["૫૦૦ ગ્રામ", "૫૦૦૦ ગ્રામ", "૫૦ ગ્રામ"] }
+        ];
+
+        let currentQuestionIndex = 0;
+        let selectedWeightElement = null;
+
+        const questionText = document.getElementById('question-text');
+        const optionsArea = document.getElementById('options-area');
+        const dropZone = document.getElementById('drop-zone');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const nextBtn = document.getElementById('next-btn');
+        const currentQDisplay = document.getElementById('current-q');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestion() {
+            // રિસેટ UI
+            feedbackMsg.textContent = "";
+            feedbackMsg.className = "feedback";
+            nextBtn.style.display = "none";
+            dropZone.innerHTML = "અહીં મૂકો";
+            dropZone.style.border = "4px dashed #4ecdc4";
+            dropZone.style.backgroundColor = "#f7fff7";
+            optionsArea.innerHTML = "";
+            selectedWeightElement = null;
+
+            if (currentQuestionIndex >= questionsData.length) {
+                questionText.innerHTML = "🎉 અભિનંદન! તમે બધા પ્રશ્નોના સાચા જવાબ આપ્યા છે! 🎉";
+                dropZone.style.display = "none";
+                optionsArea.style.display = "none";
+                nextBtn.textContent = "ફરીથી રમો 🔄";
+                nextBtn.style.display = "inline-block";
+                nextBtn.onclick = () => location.reload();
+                return;
+            }
+
+            const currentQ = questionsData[currentQuestionIndex];
+            currentQDisplay.textContent = currentQuestionIndex + 1;
+            questionText.textContent = currentQ.q;
+
+            // ઓપ્શનને શફલ કરો (Randomize)
+            let shuffledOptions = [...currentQ.options];
+            shuffleArray(shuffledOptions);
+
+            shuffledOptions.forEach(opt => {
+                const weightDiv = document.createElement('div');
+                weightDiv.classList.add('weight');
+                weightDiv.textContent = opt;
+                weightDiv.dataset.value = opt;
+                weightDiv.draggable = true;
+
+                // ડ્રેગ એન્ડ ડ્રોપ ઇવેન્ટ્સ (PC માટે)
+                weightDiv.addEventListener('dragstart', handleDragStart);
+                weightDiv.addEventListener('dragend', handleDragEnd);
+
+                // ક્લિક ઇવેન્ટ્સ (મોબાઇલ માટે)
+                weightDiv.addEventListener('click', handleWeightClick);
+
+                optionsArea.appendChild(weightDiv);
+            });
+        }
+
+        // --- Drag and Drop Functions (Desktop) ---
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.value);
+            setTimeout(() => e.target.style.opacity = '0.5', 0);
+        }
+
+        function handleDragEnd(e) {
+            e.target.style.opacity = '1';
+        }
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('hovered');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('hovered');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('hovered');
+            const draggedValue = e.dataTransfer.getData('text/plain');
+            checkAnswer(draggedValue);
+        });
+
+        // --- Click to Move Functions (Mobile Friendly) ---
+        function handleWeightClick(e) {
+            // Remove selection from all
+            document.querySelectorAll('.weight').forEach(w => w.classList.remove('selected'));
+            
+            selectedWeightElement = e.target;
+            selectedWeightElement.classList.add('selected');
+        }
+
+        dropZone.addEventListener('click', () => {
+            if (selectedWeightElement) {
+                checkAnswer(selectedWeightElement.dataset.value);
+                selectedWeightElement.classList.remove('selected');
+                selectedWeightElement = null;
+            }
+        });
+
+        // --- Logic to check Answer ---
+        function checkAnswer(selectedValue) {
+            const currentQ = questionsData[currentQuestionIndex];
+            
+            if (selectedValue === currentQ.correct) {
+                // સાચો જવાબ
+                dropZone.innerHTML = "";
+                
+                // વજનિયાને બોક્સમાં મૂકો
+                const correctWeight = document.createElement('div');
+                correctWeight.classList.add('weight');
+                correctWeight.textContent = selectedValue;
+                correctWeight.style.cursor = 'default';
+                dropZone.appendChild(correctWeight);
+                
+                dropZone.style.border = "4px solid #2ecc71";
+                dropZone.style.backgroundColor = "#e8f8f5";
+                
+                optionsArea.innerHTML = ""; // બીજા ઓપ્શન હટાવો
+                
+                feedbackMsg.textContent = "ખૂબ સરસ!";
+                feedbackMsg.className = "feedback success";
+                nextBtn.style.display = "inline-block";
+            } else {
+                // ખોટો જવાબ
+                feedbackMsg.textContent = "ફરીથી પ્રયત્ન કરો!";
+                feedbackMsg.className = "feedback error";
+                
+                // થોડીવાર પછી મેસેજ હટાવવા
+                setTimeout(() => {
+                    if (feedbackMsg.className.includes("error")) {
+                        feedbackMsg.textContent = "";
+                    }
+                }, 2000);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        // ગેમ શરૂ કરો
+        loadQuestion();
+    </script>
+</body>
+</html>
