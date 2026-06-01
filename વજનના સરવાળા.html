@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>વજનના એકમોના સરવાળા</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mukta Vaani', sans-serif;
+        }
+
+        body {
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+            border: 4px solid #4facfe;
+        }
+
+        header h1 {
+            color: #ff5722;
+            margin-top: 0;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header p {
+            color: #555;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #ffe0b2;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #e65100;
+            margin-bottom: 20px;
+        }
+
+        .weight-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #e1bee7;
+            border-radius: 15px;
+            border: 2px dashed #9c27b0;
+        }
+
+        .weight {
+            background: linear-gradient(145deg, #ffca28, #ffb300);
+            border: 3px solid #ff6f00;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3e2723;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 5px 0 #ff6f00;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .weight:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #ff6f00;
+            cursor: grabbing;
+        }
+
+        .weight.selected {
+            border-color: #d50000;
+            box-shadow: 0 0 15px rgba(213, 0, 0, 0.6);
+            transform: scale(1.05);
+        }
+
+        .equation-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 30px 0;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .slot {
+            width: 120px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .slot.empty {
+            background-color: #f5f5f5;
+            border: 3px dashed #9e9e9e;
+            color: #9e9e9e;
+            cursor: pointer;
+        }
+
+        .slot.empty.drag-over {
+            background-color: #c8e6c9;
+            border-color: #4caf50;
+        }
+
+        .slot.filled {
+            background: linear-gradient(145deg, #81c784, #4caf50);
+            border: 3px solid #2e7d32;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2e7d32;
+        }
+
+        .slot.fixed {
+            background: linear-gradient(145deg, #4fc3f7, #29b6f6);
+            border: 3px solid #0277bd;
+            color: white;
+            box-shadow: 0 4px 0 #0277bd;
+        }
+
+        .target-weight {
+            background-color: #ff5252;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 3px solid #b71c1c;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button.action-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button.action-btn:hover {
+            background-color: #388e3c;
+            transform: scale(1.05);
+        }
+
+        #next-btn, #restart-btn {
+            background-color: #2196f3;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+            display: none;
+        }
+
+        #next-btn:hover, #restart-btn:hover {
+            background-color: #1976d2;
+        }
+
+        #feedback-msg {
+            margin-top: 20px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            min-height: 40px;
+        }
+
+        .correct { color: #4caf50; animation: pop 0.5s ease; }
+        .incorrect { color: #f44336; animation: shake 0.4s ease; }
+
+        footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+            color: #777;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .instruction {
+            background-color: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 10px;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            text-align: left;
+            color: #0d47a1;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.8rem; }
+            .weight { padding: 10px 15px; font-size: 1rem; }
+            .slot { width: 90px; height: 50px; font-size: 0.9rem; }
+            .equation-area { font-size: 1.4rem; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <header>
+            <h1>વજનના એકમોના સરવાળા</h1>
+            <div class="instruction">
+                <b>સૂચના:</b> વજનીયાને ખેંચીને (Drag & Drop) ખાલી જગ્યામાં મૂકો, અથવા પહેલા વજનીયા પર ક્લિક કરો અને પછી ખાલી જગ્યા પર ક્લિક કરો.
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <span id="question-text">પ્રશ્ન: 1 / 10</span>
+            <span id="score-text">સ્કોર: 0</span>
+        </div>
+
+        <div class="weight-bank" id="weight-bank">
+            </div>
+
+        <div class="equation-area" id="equation-area">
+            </div>
+
+        <div id="feedback-msg"></div>
+
+        <div class="controls">
+            <button id="check-btn" class="action-btn" onclick="checkAnswer()">ચકાસો</button>
+            <button id="next-btn" class="action-btn" onclick="nextQuestion()">આગળનો પ્રશ્ન</button>
+            <button id="restart-btn" class="action-btn" onclick="startGame()">ફરીથી રમો</button>
+        </div>
+
+        <footer>
+            <strong>Created by વિજયકુમાર ચાવડા</strong><br>
+            દાદાના મુવાડા પ્રાથમિક શાળા
+        </footer>
+    </div>
+
+    <script>
+        const availableWeights = [50, 100, 200, 250, 500, 1000];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedWeightValue = null;
+
+        // પ્રશ્નોની યાદી (10 પ્રશ્નો)
+        const questions = [
+            { target: 100, slots: ['empty', 'empty'] }, 
+            { target: 200, slots: ['empty', 'empty'] },
+            { target: 300, slots: [{val: 50}, 'empty', 'empty'] }, 
+            { target: 500, slots: ['empty', 'empty'] },
+            { target: 600, slots: ['empty', 'empty', 'empty'] },
+            { target: 750, slots: [{val: 250}, 'empty', 'empty'] },
+            { target: 1000, slots: ['empty', 'empty'] },
+            { target: 1250, slots: [{val: 500}, 'empty', 'empty'] },
+            { target: 1500, slots: ['empty', 'empty', 'empty'] },
+            { target: 800, slots: [{val: 200}, {val: 100}, 'empty', 'empty'] }
+        ];
+
+        // વજનીયા બેંક બનાવો
+        function setupWeightBank() {
+            const bank = document.getElementById('weight-bank');
+            bank.innerHTML = '';
+            availableWeights.forEach(weight => {
+                const el = document.createElement('div');
+                el.className = 'weight';
+                el.draggable = true;
+                el.textContent = weight + ' ગ્રામ';
+                el.dataset.value = weight;
+                
+                // ડ્રેગ એન્ડ ડ્રોપ ઇવેન્ટ્સ
+                el.addEventListener('dragstart', handleDragStart);
+                
+                // મોબાઇલ માટે ક્લિક ઇવેન્ટ
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.weight').forEach(w => w.classList.remove('selected'));
+                    el.classList.add('selected');
+                    selectedWeightValue = weight;
+                });
+                
+                bank.appendChild(el);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.value);
+            selectedWeightValue = e.target.dataset.value;
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            const area = document.getElementById('equation-area');
+            area.innerHTML = '';
+            selectedWeightValue = null;
+            document.querySelectorAll('.weight').forEach(w => w.classList.remove('selected'));
+
+            document.getElementById('question-text').textContent = `પ્રશ્ન: ${currentQuestionIndex + 1} / ${questions.length}`;
+            document.getElementById('feedback-msg').textContent = '';
+            document.getElementById('feedback-msg').className = '';
+            document.getElementById('check-btn').style.display = 'inline-block';
+            document.getElementById('next-btn').style.display = 'none';
+
+            q.slots.forEach((slot, index) => {
+                const slotEl = document.createElement('div');
+                
+                if (slot === 'empty') {
+                    slotEl.className = 'slot empty';
+                    slotEl.textContent = 'ખાલી જગ્યા';
+                    slotEl.dataset.value = "";
+                    
+                    // ડ્રોપ ઇવેન્ટ્સ
+                    slotEl.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        slotEl.classList.add('drag-over');
+                    });
+                    slotEl.addEventListener('dragleave', () => slotEl.classList.remove('drag-over'));
+                    slotEl.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        slotEl.classList.remove('drag-over');
+                        const val = e.dataTransfer.getData('text/plain');
+                        fillSlot(slotEl, val);
+                    });
+
+                    // ક્લિક ઇવેન્ટ (મોબાઇલ સપોર્ટ)
+                    slotEl.addEventListener('click', () => {
+                        if (selectedWeightValue) {
+                            fillSlot(slotEl, selectedWeightValue);
+                        } else if (slotEl.classList.contains('filled')) {
+                            // ખાલી કરવા માટે
+                            slotEl.className = 'slot empty';
+                            slotEl.textContent = 'ખાલી જગ્યા';
+                            slotEl.dataset.value = "";
+                        }
+                    });
+
+                } else {
+                    slotEl.className = 'slot fixed';
+                    slotEl.textContent = slot.val + ' ગ્રામ';
+                    slotEl.dataset.value = slot.val;
+                }
+
+                area.appendChild(slotEl);
+
+                // સરવાળાની નિશાની મૂકવા
+                if (index < q.slots.length - 1) {
+                    const plus = document.createElement('span');
+                    plus.textContent = '+';
+                    area.appendChild(plus);
+                }
+            });
+
+            // બરાબર અને જવાબ
+            const equals = document.createElement('span');
+            equals.textContent = '=';
+            area.appendChild(equals);
+
+            const targetEl = document.createElement('div');
+            targetEl.className = 'target-weight';
+            targetEl.textContent = q.target + ' ગ્રામ';
+            area.appendChild(targetEl);
+        }
+
+        function fillSlot(element, value) {
+            element.dataset.value = value;
+            element.textContent = value + ' ગ્રામ';
+            element.className = 'slot filled';
+        }
+
+        function checkAnswer() {
+            const q = questions[currentQuestionIndex];
+            const slots = document.querySelectorAll('.equation-area .slot');
+            let totalSum = 0;
+            let allFilled = true;
+
+            slots.forEach(slot => {
+                const val = parseInt(slot.dataset.value);
+                if (isNaN(val)) {
+                    allFilled = false;
+                } else {
+                    totalSum += val;
+                }
+            });
+
+            const feedback = document.getElementById('feedback-msg');
+
+            if (!allFilled) {
+                feedback.textContent = 'કૃપા કરીને બધી ખાલી જગ્યાઓ ભરો!';
+                feedback.className = 'incorrect';
+                return;
+            }
+
+            if (totalSum === q.target) {
+                feedback.textContent = 'ખૂબ સરસ!';
+                feedback.className = 'correct';
+                score++;
+                document.getElementById('score-text').textContent = `સ્કોર: ${score}`;
+                document.getElementById('check-btn').style.display = 'none';
+                
+                if (currentQuestionIndex < questions.length - 1) {
+                    document.getElementById('next-btn').style.display = 'inline-block';
+                } else {
+                    setTimeout(() => showFinalResult(), 1500);
+                }
+            } else {
+                feedback.textContent = 'ફરીથી પ્રયત્ન કરો!';
+                feedback.className = 'incorrect';
+                
+                // ખોટા જવાબ પછી ખાલી જગ્યાઓ ફરી ખાલી કરો
+                slots.forEach(slot => {
+                    if (!slot.classList.contains('fixed')) {
+                        slot.className = 'slot empty';
+                        slot.textContent = 'ખાલી જગ્યા';
+                        slot.dataset.value = "";
+                    }
+                });
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+        function showFinalResult() {
+            const area = document.getElementById('equation-area');
+            const bank = document.getElementById('weight-bank');
+            const controls = document.querySelector('.controls');
+            const feedback = document.getElementById('feedback-msg');
+
+            bank.style.display = 'none';
+            document.getElementById('check-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+
+            area.innerHTML = `<div style="font-size:2rem; color:#2e7d32; text-align:center;">
+                                રમત પૂર્ણ થઈ!<br> તમારો કુલ સ્કોર: ${score} / ${questions.length}
+                              </div>`;
+            feedback.textContent = '';
+            document.getElementById('restart-btn').style.display = 'inline-block';
+        }
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('score-text').textContent = `સ્કોર: 0`;
+            document.getElementById('weight-bank').style.display = 'flex';
+            document.getElementById('restart-btn').style.display = 'none';
+            setupWeightBank();
+            renderQuestion();
+        }
+
+        // ગેમ શરૂ કરો
+        window.onload = startGame;
+
+    </script>
+</body>
+</html>
