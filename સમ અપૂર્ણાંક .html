@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>સમ અપૂર્ણાંક શોધો</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Hind Vadodara', sans-serif;
+        }
+
+        body {
+            background-color: #E0F7FA;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Start Screen */
+        #start-screen, #end-screen {
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #FF5722;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .credits {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 30px;
+            background: #FFF3E0;
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 80%;
+            max-width: 400px;
+            padding: 12px;
+            font-size: 1.1rem;
+            border: 2px solid #B2EBF2;
+            border-radius: 8px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: #00BCD4;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        /* Game Screen */
+        #game-screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .header div {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background-color: #FFF9C4; /* Yellow Background */
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 350px;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+        }
+
+        .monkey-container {
+            font-size: 100px;
+            width: 120px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        /* Monkey Animations */
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-40px); }
+        }
+        .jumping {
+            animation: jump 0.4s ease-in-out 3;
+        }
+
+        .question-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .drop-zone {
+            width: 220px;
+            height: 220px;
+            border: 4px dashed #FF9800;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .drop-zone.dragover {
+            background: #FFE0B2;
+            border-color: #E65100;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 150px;
+        }
+
+        .option {
+            background: #03A9F4;
+            color: white;
+            padding: 15px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 12px;
+            cursor: grab;
+            box-shadow: 0 4px 10px rgba(3, 169, 244, 0.4);
+            user-select: none;
+        }
+        
+        .option:active {
+            cursor: grabbing;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #666;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        /* End Screen */
+        .trophy {
+            font-size: 120px;
+            margin-bottom: 20px;
+        }
+
+        .stats-box {
+            background: #F5F5F5;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px auto;
+            max-width: 400px;
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                justify-content: center;
+            }
+            .options-container {
+                flex-direction: row;
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .option {
+                padding: 10px 20px;
+            }
+            .monkey-container {
+                order: 3;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="start-screen">
+            <h1>સમ અપૂર્ણાંક શોધો</h1>
+            <div class="credits">
+                <strong>Created by.</strong> વિજય ચાવડા<br>
+                દાદાના મુવાડા પ્રાથમિક શાળા તા. ફાગવેલ જિ.ખેડા
+            </div>
+            <div class="input-group">
+                <input type="text" id="schoolName" placeholder="શાળાનું નામ દાખલ કરો">
+            </div>
+            <div class="input-group">
+                <input type="text" id="studentName" placeholder="વિદ્યાર્થીનું નામ દાખલ કરો">
+            </div>
+            <div id="error-msg" class="error">કૃપા કરીને શાળા અને વિદ્યાર્થી બંનેનું નામ દાખલ કરો!</div>
+            <button class="btn" onclick="startGame()">રમત શરૂ કરો ▶</button>
+        </div>
+
+        <div id="game-screen">
+            <div class="header">
+                <div>વિદ્યાર્થી: <span id="display-student"></span></div>
+                <div>શાળા: <span id="display-school"></span></div>
+                <div>સ્કોર: <span id="score">૦</span></div>
+                <div>સમય: <span id="timer">૬૦</span> સેકન્ડ</div>
+            </div>
+
+            <div class="game-area">
+                <div class="monkey-container" id="monkey">🐒</div>
+                
+                <div class="question-container">
+                    <div class="drop-zone" id="drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        </div>
+                </div>
+
+                <div class="options-container" id="options">
+                    </div>
+                <div class="instruction">સાચા અપૂર્ણાંકને ખેંચીને (Drag & Drop) આકાર પર મૂકો અથવા વિકલ્પ પર ક્લિક કરો.</div>
+            </div>
+        </div>
+
+        <div id="end-screen" style="display: none;">
+            <div id="end-icon" class="trophy">🏆</div>
+            <h1 id="end-title">અભિનંદન!</h1>
+            <div class="stats-box">
+                <div><strong>વિદ્યાર્થી:</strong> <span id="end-student"></span></div>
+                <div><strong>શાળા:</strong> <span id="end-school"></span></div>
+                <div><strong>તમારો સ્કોર:</strong> <span id="end-score"></span> / ૧૦૦</div>
+            </div>
+            <button class="btn" onclick="resetGame()">નવા વિદ્યાર્થી માટે રમત શરૂ કરો</button>
+        </div>
+    </div>
+
+    <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
+    <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/buzz.ogg" preload="auto"></audio>
+    <audio id="sound-win" src="https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg" preload="auto"></audio>
+
+    <script>
+        // Gujarati Digits Converter
+        const gujDigits = ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯'];
+        function toGujarati(num) {
+            return num.toString().split('').map(d => gujDigits[d] || d).join('');
+        }
+
+        // Question Data Base (Grades 6-8 Equivalent Fractions)
+        // total: number of sides/parts, filled: colored parts
+        const questionBank = [
+            { total: 4, filled: 2, correct: '૧/૨', options: ['૧/૨', '૨/૩', '૩/૪'] }, // ચોરસ (Square) -> 2/4 = 1/2
+            { total: 6, filled: 4, correct: '૨/૩', options: ['૨/૩', '૧/૪', '૧/૩'] }, // ષટ્કોણ (Hexagon) -> 4/6 = 2/3
+            { total: 8, filled: 2, correct: '૧/૪', options: ['૧/૪', '૧/૨', '૩/૪'] }, // અષ્ટકોણ (Octagon) -> 2/8 = 1/4
+            { total: 9, filled: 3, correct: '૧/૩', options: ['૧/૩', '૨/૫', '૩/૪'] }, // નવકોણ -> 3/9 = 1/3
+            { total: 8, filled: 6, correct: '૩/૪', options: ['૩/૪', '૧/૨', '૨/૩'] }, // અષ્ટકોણ -> 6/8 = 3/4
+            { total: 10, filled: 4, correct: '૨/૫', options: ['૨/૫', '૩/૫', '૧/૪'] }, // દશકોણ -> 4/10 = 2/5
+            { total: 12, filled: 2, correct: '૧/૬', options: ['૧/૬', '૧/૩', '૧/૪'] }, // બારકોણ -> 2/12 = 1/6
+            { total: 5, filled: 2, correct: '૪/૧૦', options: ['૪/૧૦', '૩/૫', '૨/૧૦'] }, // પંચકોણ (Pentagon) -> 2/5 = 4/10
+            { total: 7, filled: 3, correct: '૬/૧૪', options: ['૬/૧૪', '૩/૧૪', '૪/૭'] }, // સપ્તકોણ (Heptagon) -> 3/7 = 6/14
+            { total: 3, filled: 2, correct: '૪/૬', options: ['૪/૬', '૧/૩', '૫/૬'] }  // ત્રિકોણ (Triangle) -> 2/3 = 4/6
+        ];
+
+        let currentQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let isProcessing = false;
+
+        // SVG Generator for regular polygons divided into equal slices
+        function generatePolygonSVG(sides, filled) {
+            let svg = `<svg width="180" height="180" viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">`;
+            let radius = 90;
+            for(let i = 0; i < sides; i++) {
+                let startAngle = (i * 2 * Math.PI) / sides - Math.PI / 2;
+                let endAngle = ((i + 1) * 2 * Math.PI) / sides - Math.PI / 2;
+                
+                let x1 = radius * Math.cos(startAngle);
+                let y1 = radius * Math.sin(startAngle);
+                let x2 = radius * Math.cos(endAngle);
+                let y2 = radius * Math.sin(endAngle);
+                
+                let fillColor = i < filled ? '#FF5722' : '#FFFFFF';
+                svg += `<path d="M 0 0 L ${x1} ${y1} L ${x2} ${y2} Z" fill="${fillColor}" stroke="#333" stroke-width="3" stroke-linejoin="round"/>`;
+            }
+            svg += `</svg>`;
+            return svg;
+        }
+
+        function startGame() {
+            const school = document.getElementById('schoolName').value.trim();
+            const student = document.getElementById('studentName').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+
+            if (!school || !student) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+            errorMsg.style.display = 'none';
+
+            document.getElementById('display-school').innerText = school;
+            document.getElementById('display-student').innerText = student;
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+
+            // Shuffle questions
+            currentQuestions = [...questionBank].sort(() => Math.random() - 0.5);
+            currentQIndex = 0;
+            score = 0;
+            timeLeft = 60;
+            isProcessing = false;
+            
+            document.getElementById('score').innerText = toGujarati(score);
+            updateTimerDisplay();
+
+            timerInterval = setInterval(updateTimer, 1000);
+            loadNextQuestion();
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            updateTimerDisplay();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert('સમય પૂરો થયો!');
+                showEndScreen();
+            }
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').innerText = toGujarati(Math.max(0, timeLeft));
+        }
+
+        function loadNextQuestion() {
+            if (currentQIndex >= 10) {
+                clearInterval(timerInterval);
+                showEndScreen();
+                return;
+            }
+
+            isProcessing = false;
+            let q = currentQuestions[currentQIndex];
+            
+            // Render SVG
+            document.getElementById('drop-zone').innerHTML = generatePolygonSVG(q.total, q.filled);
+            
+            // Render Options (Shuffled)
+            let shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+            let optionsHtml = '';
+            shuffledOptions.forEach(opt => {
+                optionsHtml += `<div class="option" draggable="true" ondragstart="drag(event)" onclick="checkAnswer('${opt}')">${opt}</div>`;
+            });
+            document.getElementById('options').innerHTML = optionsHtml;
+        }
+
+        // Drag and Drop Handlers
+        function allowDrop(ev) {
+            ev.preventDefault();
+            document.getElementById('drop-zone').classList.add('dragover');
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.innerText);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            document.getElementById('drop-zone').classList.remove('dragover');
+            let data = ev.dataTransfer.getData("text");
+            if(data) checkAnswer(data);
+        }
+
+        // Logic check
+        function checkAnswer(selectedOption) {
+            if(isProcessing) return;
+            isProcessing = true;
+
+            let q = currentQuestions[currentQIndex];
+            let monkey = document.getElementById('monkey');
+
+            if (selectedOption === q.correct) {
+                // સાચો જવાબ
+                score += 10;
+                document.getElementById('score').innerText = toGujarati(score);
+                document.getElementById('sound-correct').play();
+                monkey.innerText = '🐒';
+                monkey.classList.add('jumping');
+            } else {
+                // ખોટો જવાબ
+                document.getElementById('sound-wrong').play();
+                monkey.innerText = '😢';
+                monkey.classList.remove('jumping');
+            }
+
+            // 1.5 સેકન્ડ પછી નવો પ્રશ્ન
+            setTimeout(() => {
+                monkey.innerText = '🐒';
+                monkey.classList.remove('jumping');
+                currentQIndex++;
+                loadNextQuestion();
+            }, 1500);
+        }
+
+        function showEndScreen() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'block';
+
+            document.getElementById('end-school').innerText = document.getElementById('schoolName').value;
+            document.getElementById('end-student').innerText = document.getElementById('studentName').value;
+            document.getElementById('end-score').innerText = toGujarati(score);
+
+            const title = document.getElementById('end-title');
+            const icon = document.getElementById('end-icon');
+
+            // 4 કે તેથી વધુ સાચા જવાબો માટે (40 points)
+            if (score >= 40) {
+                icon.innerText = '🏆';
+                title.innerText = 'અભિનંદન!';
+                title.style.color = '#4CAF50';
+                document.getElementById('sound-win').play();
+            } else {
+                icon.innerText = '👍';
+                title.innerText = 'સારો પ્રયત્ન! ફરી રમો.';
+                title.style.color = '#FF9800';
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('schoolName').value = '';
+            document.getElementById('studentName').value = '';
+            document.getElementById('end-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'block';
+        }
+
+        // Add dragleave event to remove hover style
+        document.getElementById('drop-zone').addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+    </script>
+</body>
+</html>
