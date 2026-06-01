@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અપૂર્ણાંકના સરવાળા - બાળકો માટે ગેમ</title>
+    <style>
+        /* બેઝિક સ્ટાઇલ અને આકર્ષક બેકગ્રાઉન્ડ */
+        body {
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* સ્ક્રીન કન્ટેનર ડિઝાઇન */
+        .screen {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            border: 4px dashed #ff7675;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            color: #0984e3;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .creator-info {
+            font-size: 16px;
+            color: #2d3436;
+            margin-bottom: 25px;
+            font-weight: bold;
+            background: #ffeaa7;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* ઇનપુટ બોક્સ ડિઝાઇન */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 85%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 3px solid #74b9ff;
+            border-radius: 10px;
+            font-size: 18px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: #0984e3;
+            box-shadow: 0 0 10px rgba(9, 132, 227, 0.3);
+        }
+
+        .error {
+            color: #d63031;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: -5px;
+        }
+
+        /* બટન ડિઝાઇન */
+        button.start-btn {
+            background: #ff7675;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,118,117,0.4);
+            transition: 0.3s;
+        }
+
+        button.start-btn:hover {
+            transform: scale(1.05);
+            background: #d63031;
+        }
+
+        /* ગેમ સ્ક્રીન હેડર */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #74b9ff;
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .score-board {
+            font-size: 20px;
+            background: #fdcb6e;
+            color: #2d3436;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* પ્રશ્ન અને અપૂર્ણાંક ડિઝાઇન */
+        .question-container {
+            font-size: 35px;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 30px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .fraction .top {
+            border-bottom: 4px solid #2c3e50;
+            padding: 0 10px;
+        }
+
+        .fraction .bottom {
+            padding: 0 10px;
+        }
+
+        #feedback-msg {
+            height: 30px;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* વિકલ્પો (ઓપ્શન બટન) */
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .option-btn {
+            background: #a29bfe;
+            border: 4px solid #6c5ce7;
+            padding: 15px;
+            font-size: 24px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+            display: flex;
+            justify-content: center;
+        }
+
+        .option-btn:hover {
+            background: #6c5ce7;
+            transform: scale(1.05);
+        }
+
+        /* સાચા અને ખોટા જવાબ માટે ક્લાસ */
+        .correct {
+            background: #55efc4 !important;
+            border-color: #00b894 !important;
+            box-shadow: 0 0 20px #55efc4 !important;
+        }
+
+        .wrong {
+            background: #ff7675 !important;
+            border-color: #d63031 !important;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* રિસ્પોન્સિવ ડિઝાઇન */
+        @media (max-width: 480px) {
+            .options-container { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="screen">
+        <h1>🎈 ગણિતની મજેદાર રમત 🎈</h1>
+        <div class="creator-info">
+            Created by . વિજય ચાવડા<br>
+            દાદાના મુવાડા પ્રાથમિક શાળા તા. ફાગવેલ જિ.ખેડા
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="student-name" placeholder="વિદ્યાર્થીનું નામ અહી લખો...">
+            <input type="text" id="school-name" placeholder="શાળાનું નામ અહી લખો...">
+            <p id="error-msg" class="error hidden">કૃપા કરીને બંને નામ દાખલ કરો!</p>
+        </div>
+        
+        <button class="start-btn" onclick="startGame()">રમત શરૂ કરો ▶</button>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div class="header">
+            <div class="info">
+                👦 <b><span id="display-student"></span></b> | 🏫 <span id="display-school"></span>
+            </div>
+            <div class="score-board">સ્કોર: <span id="score">0</span> 🏆</div>
+        </div>
+
+        <div class="question-container" id="question-box">
+            </div>
+
+        <div id="feedback-msg"></div>
+
+        <div class="options-container" id="options-box">
+            </div>
+    </div>
+
+    <script>
+        let score = 0;
+
+        // રમત શરૂ કરવાનું ફંક્શન
+        function startGame() {
+            const student = document.getElementById('student-name').value;
+            const school = document.getElementById('school-name').value;
+            const errorMsg = document.getElementById('error-msg');
+            
+            // વેલિડેશન: જો ખાલી હોય તો લાલ એરર બતાવો
+            if(!student.trim() || !school.trim()) {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            errorMsg.classList.add('hidden');
+            
+            // હેડરમાં નામ સેટ કરો
+            document.getElementById('display-student').innerText = student;
+            document.getElementById('display-school').innerText = school;
+            
+            // સ્ક્રીન બદલો
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            generateQuestion();
+        }
+
+        // અપૂર્ણાંક માટે HTML બનાવવાનું ફંક્શન
+        function createFractionHTML(num, den) {
+            return `<div class="fraction"><span class="top">${num}</span><span class="bottom">${den}</span></div>`;
+        }
+
+        // નવો પ્રશ્ન બનાવવાનું ફંક્શન
+        function generateQuestion() {
+            document.getElementById('feedback-msg').innerHTML = "";
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = "";
+            
+            // 1 થી 20 સુધીના સરવાળા માટે આંકડા પસંદ કરો
+            let den = Math.floor(Math.random() * 8) + 2; // છેદ (2 થી 9)
+            let num1 = Math.floor(Math.random() * 10) + 1; // પહેલો અંશ
+            let num2 = Math.floor(Math.random() * 10) + 1; // બીજો અંશ
+            
+            let correctNum = num1 + num2; // સાચો સરવાળો
+            
+            // પ્રશ્ન સ્ક્રીન પર દેખાડો
+            const questionHTML = createFractionHTML(num1, den) + " <span style='color:#e17055;'>+</span> " + createFractionHTML(num2, den) + " <span style='color:#e17055;'>=</span> ?";
+            document.getElementById('question-box').innerHTML = questionHTML;
+            
+            let correctAnsHTML = createFractionHTML(correctNum, den);
+            
+            // વિકલ્પોની યાદી બનાવો (1 સાચો, 3 ખોટા)
+            let options = [{html: correctAnsHTML, isCorrect: true}];
+            
+            while(options.length < 4) {
+                // નજીકના ખોટા જવાબો બનાવો
+                let wrongNum = correctNum + (Math.floor(Math.random() * 5) - 2); 
+                if(wrongNum === correctNum || wrongNum <= 0) wrongNum = correctNum + Math.floor(Math.random() * 4) + 1;
+                
+                let wrongAnsHTML = createFractionHTML(wrongNum, den);
+                
+                // એક સરખા વિકલ્પો ના આવે તેનું ચેકિંગ
+                if(!options.some(opt => opt.html === wrongAnsHTML)) {
+                    options.push({html: wrongAnsHTML, isCorrect: false});
+                }
+            }
+            
+            // 4 વિકલ્પોને આડા-અવળા (Shuffle) કરો
+            options.sort(() => Math.random() - 0.5);
+            
+            // બટન સ્ક્રીન પર મૂકો
+            options.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = opt.html;
+                btn.onclick = () => checkAnswer(btn, opt.isCorrect);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        // જવાબ ચેક કરવાનું ફંક્શન
+        function checkAnswer(btn, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            // એક વાર ક્લિક કર્યા પછી બધા બટન ડિસેબલ કરો
+            allBtns.forEach(b => b.disabled = true);
+            
+            if(isCorrect) {
+                // સાચો જવાબ
+                btn.classList.add('correct');
+                score += 10;
+                document.getElementById('score').innerText = score;
+                document.getElementById('feedback-msg').innerHTML = "<span style='color:#00b894;'>ખૂબ સરસ! સાચો જવાબ! 🌟</span>";
+                
+                // થોડીવાર પછી નવો પ્રશ્ન લાવો
+                setTimeout(generateQuestion, 1500);
+            } else {
+                // ખોટો જવાબ
+                btn.classList.add('wrong');
+                document.getElementById('feedback-msg').innerHTML = "<span style='color:#d63031;'>ફરી પ્રયાસ કરો! ❌</span>";
+                
+                // થોડીવાર પછી બટન નોર્મલ કરો
+                setTimeout(() => {
+                    btn.classList.remove('wrong');
+                    document.getElementById('feedback-msg').innerHTML = "";
+                    allBtns.forEach(b => b.disabled = false);
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
