@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ખૂણો માપો - શૈક્ષણિક રમત</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Mukta Vaani', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        /* હેડરની ડિઝાઇન */
+        header {
+            background-color: #ff9800;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 15px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .game-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            margin-top: 30px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #2196f3;
+            margin-top: 0;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4caf50;
+        }
+
+        canvas {
+            background-color: #fff;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            font-size: 1.2rem;
+            width: 80px;
+            text-align: center;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-family: 'Mukta Vaani', sans-serif;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: 0.3s;
+        }
+
+        .check-btn { background-color: #4caf50; }
+        .check-btn:hover { background-color: #388e3c; }
+        .check-btn:disabled { background-color: #a5d6a7; cursor: not-allowed; }
+
+        .next-btn { background-color: #2196f3; display: none; }
+        .next-btn:hover { background-color: #1976d2; }
+
+        #feedback {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 30px;
+            margin: 10px 0;
+        }
+
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>Created by: વિજય ચાવડા</h2>
+        <p>શાળા: દાદાના મુવાડા</p>
+    </header>
+
+    <div class="game-container">
+        <h1>ખૂણો માપો</h1>
+        
+        <div class="info-bar">
+            <span id="questionCount">પ્રશ્ન: ૧/૧૦</span>
+            <span id="scoreBoard">સ્કોર: ૦</span>
+        </div>
+
+        <canvas id="angleCanvas" width="400" height="230"></canvas>
+
+        <div id="gameplayArea">
+            <div class="input-group">
+                <label for="angleInput" style="font-size: 1.2rem; font-weight: bold;">ખૂણાનું માપ: </label>
+                <input type="number" id="angleInput" placeholder="દા.ત. 90"> <span style="font-size: 1.2rem;">&deg;</span>
+            </div>
+
+            <button class="check-btn" id="checkBtn" onclick="checkAnswer()">જવાબ ચકાસો</button>
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()">નવો ખૂણો</button>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("angleCanvas");
+        const ctx = canvas.getContext("2d");
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height - 25; // નીચે થોડી જગ્યા છોડવા માટે
+        const radius = 160;
+
+        let currentAngle = 0;
+        let score = 0;
+        let questionNo = 1;
+        const maxQuestions = 10;
+        let answeredCorrectly = false;
+
+        // નંબરોને ગુજરાતીમાં ફેરવવા માટેનું ફંક્શન (વૈકલ્પિક ઉપયોગ માટે)
+        function toGujaratiNumber(num) {
+            const gujDigits = ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯'];
+            return num.toString().split('').map(d => gujDigits[d]).join('');
+        }
+
+        function drawProtractor() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // અર્ધવર્તુળ (કોણમાપકનો બેઝ)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, Math.PI, 0);
+            ctx.lineTo(centerX + radius + 10, centerY);
+            ctx.lineTo(centerX - radius - 10, centerY);
+            ctx.closePath();
+            ctx.fillStyle = "#e3f2fd";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#1565c0";
+            ctx.stroke();
+
+            // કાપા અને નંબરો દોરવા
+            for (let i = 0; i <= 180; i += 10) {
+                let rad = i * Math.PI / 180;
+                let tickLength = (i % 90 === 0) ? 20 : (i % 50 === 0 ? 15 : 10);
+                let innerRadius = radius - tickLength;
+                
+                let x1 = centerX + radius * Math.cos(rad);
+                let y1 = centerY - radius * Math.sin(rad);
+                let x2 = centerX + innerRadius * Math.cos(rad);
+                let y2 = centerY - innerRadius * Math.sin(rad);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = "#333";
+                ctx.stroke();
+
+                // 10, 20, 30... ના અંકો દોરવા
+                if (i % 20 === 0 || i === 10 || i === 180) {
+                    let textRadius = radius + 15;
+                    let tx = centerX + textRadius * Math.cos(rad);
+                    let ty = centerY - textRadius * Math.sin(rad);
+                    ctx.fillStyle = "#d84315";
+                    ctx.font = "bold 14px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(i + "°", tx, ty);
+                }
+            }
+        }
+
+        function drawAngle(angle) {
+            drawProtractor(); // પહેલા કોણમાપક દોરો
+
+            // પાયાની રેખા (0 ડિગ્રી પર)
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX + radius - 10, centerY);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+
+            // ખૂણાની રેખા
+            let rad = angle * Math.PI / 180;
+            let x = centerX + (radius - 10) * Math.cos(rad);
+            let y = centerY - (radius - 10) * Math.sin(rad); // Y અક્ષ ઊલટો હોય છે
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "#d32f2f"; // લાલ રંગની લાઈન
+            ctx.stroke();
+
+            // કેન્દ્રનું બિંદુ
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill();
+        }
+
+        function generateNewAngle() {
+            // 10 થી 180 ની વચ્ચેનો રેન્ડમ ખૂણો (10 ના ગુણાંકમાં, જેથી બાળકો સરળતાથી માપી શકે)
+            currentAngle = Math.floor(Math.random() * 18 + 1) * 10; 
+            drawAngle(currentAngle);
+            
+            document.getElementById("angleInput").value = "";
+            document.getElementById("feedback").innerText = "";
+            document.getElementById("feedback").className = "";
+            document.getElementById("checkBtn").disabled = false;
+            document.getElementById("nextBtn").style.display = "none";
+            answeredCorrectly = false;
+            
+            updateScoreBoard();
+        }
+
+        function checkAnswer() {
+            let inputVal = document.getElementById("angleInput").value;
+            let feedback = document.getElementById("feedback");
+
+            if (inputVal === "") {
+                feedback.innerText = "કૃપા કરીને ખૂણાનું માપ લખો.";
+                feedback.className = "error";
+                return;
+            }
+
+            let userAnswer = parseInt(inputVal);
+
+            if (userAnswer === currentAngle) {
+                feedback.innerText = "ખૂબ સરસ! સાચો જવાબ 🎉";
+                feedback.className = "success";
+                document.getElementById("checkBtn").disabled = true;
+                document.getElementById("nextBtn").style.display = "inline-block";
+                
+                if(!answeredCorrectly) {
+                    score++;
+                    answeredCorrectly = true;
+                }
+            } else {
+                feedback.innerText = "ફરી પ્રયત્ન કરો ❌";
+                feedback.className = "error";
+            }
+            updateScoreBoard();
+        }
+
+        function nextQuestion() {
+            if (questionNo >= maxQuestions) {
+                // રમત પૂરી
+                document.getElementById("gameplayArea").innerHTML = `
+                    <h2 class="success">રમત પૂરી!</h2>
+                    <h3>તમારો અંતિમ સ્કોર: ${toGujaratiNumber(score)} / ${toGujaratiNumber(maxQuestions)}</h3>
+                    <button class="check-btn" onclick="location.reload()">ફરીથી રમો</button>
+                `;
+            } else {
+                questionNo++;
+                generateNewAngle();
+            }
+        }
+
+        function updateScoreBoard() {
+            document.getElementById("questionCount").innerText = `પ્રશ્ન: ${toGujaratiNumber(questionNo)}/${toGujaratiNumber(maxQuestions)}`;
+            document.getElementById("scoreBoard").innerText = `સ્કોર: ${toGujaratiNumber(score)}`;
+        }
+
+        // પેજ લોડ થાય ત્યારે પહેલો ખૂણો લાવવો
+        window.onload = generateNewAngle;
+
+    </script>
+</body>
+</html>
