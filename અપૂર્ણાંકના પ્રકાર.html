@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અપૂર્ણાંક ના પ્રકાર શોધો</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Vadodara', sans-serif;
+            background-color: #E0F7FA;
+            color: #333;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #00796B;
+            font-size: 28px;
+            margin: 10px 0;
+        }
+
+        .credits {
+            background: #FFFFFF;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            color: #555;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 16px;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 550px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00695C;
+        }
+
+        #game-board, #win-screen {
+            background-color: #FFF9C4;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        #svg-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            min-height: 120px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media(max-width: 480px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            background-color: #FF9800;
+            color: #fff;
+            font-family: 'Hind Vadodara', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 6px #E65100;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 #E65100;
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+            transform: none !important;
+        }
+
+        .trophy {
+            font-size: 80px;
+            margin: 10px 0;
+            animation: popIn 0.6s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .play-again-btn {
+            background-color: #4CAF50;
+            box-shadow: 0 6px #2E7D32;
+            margin-top: 20px;
+        }
+        
+        .play-again-btn:active {
+            box-shadow: 0 0 #2E7D32;
+        }
+
+        .fraction-text {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .fraction-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.8em;
+            line-height: 1.1;
+        }
+        .fraction-col span:first-child {
+            border-bottom: 2px solid white;
+            padding-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>અપૂર્ણાંક ના પ્રકાર શોધો</h1>
+        <div class="credits">
+            created by વિજયકુમાર ચાવડા<br>
+            શાળા: દાદાના મુવાડા પ્રા.શાળા
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div id="game-section">
+            <div class="score-board">
+                <div>પ્રશ્ન: <span id="q-num">૧</span>/૧૦</div>
+                <div>ગુણ: <span id="score">૦</span></div>
+            </div>
+
+            <div id="game-board">
+                <div id="svg-container"></div>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+        </div>
+
+        <div id="win-screen" style="display:none;">
+            <div id="win-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const totalQuestions = 10;
+        let currentQuestion = 0;
+        let score = 0;
+        let currentCorrectAnswer = null;
+
+        const gujDigits = ['૦','૧','૨','૩','૪','૫','૬','૭','૮','૯'];
+
+        function toGujarati(num) {
+            return num.toString().split('').map(d => gujDigits[parseInt(d)]).join('');
+        }
+
+        function initGame() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById("win-screen").style.display = "none";
+            document.getElementById("game-section").style.display = "block";
+            nextQuestion();
+        }
+
+        function createSVG(num, den) {
+            let totalShapes = Math.ceil(num / den);
+            let filled = 0;
+            let html = '';
+            let colors = ['#FF5722', '#4CAF50', '#03A9F4', '#9C27B0', '#E91E63'];
+            let color = colors[Math.floor(Math.random() * colors.length)];
+            let shapeType = Math.floor(Math.random() * 3); // 0: Horizontal, 1: Vertical, 2: Grid
+
+            for(let s = 0; s < totalShapes; s++) {
+                html += `<svg width="110" height="110" viewBox="0 0 100 100" style="border: 3px solid #333; border-radius: 8px; background: #fff;">`;
+
+                if (shapeType === 2 && (den === 4 || den === 9 || den === 16)) {
+                    let cols = Math.sqrt(den);
+                    let size = 100 / cols;
+                    for(let r = 0; r < cols; r++) {
+                        for(let c = 0; c < cols; c++) {
+                            let fill = (filled < num) ? color : 'transparent';
+                            html += `<rect x="${c*size}" y="${r*size}" width="${size}" height="${size}" fill="${fill}" stroke="#333" stroke-width="1.5"/>`;
+                            filled++;
+                        }
+                    }
+                } else if (shapeType === 1) { 
+                    let w = 100 / den;
+                    for(let i = 0; i < den; i++) {
+                        let fill = (filled < num) ? color : 'transparent';
+                        html += `<rect x="${i*w}" y="0" width="${w}" height="100" fill="${fill}" stroke="#333" stroke-width="1.5"/>`;
+                        filled++;
+                    }
+                } else {
+                    let h = 100 / den;
+                    for(let i = 0; i < den; i++) {
+                        let fill = (filled < num) ? color : 'transparent';
+                        html += `<rect x="0" y="${i*h}" width="100" height="${h}" fill="${fill}" stroke="#333" stroke-width="1.5"/>`;
+                        filled++;
+                    }
+                }
+                html += `</svg>`;
+            }
+            return html;
+        }
+
+        function getHTMLOption(type, n, d) {
+            if(type === 'proper' || type === 'improper') {
+                return `<div class="fraction-text"><div class="fraction-col"><span>${toGujarati(n)}</span><span>${toGujarati(d)}</span></div></div>`;
+            } else {
+                let w = Math.floor(n / d);
+                let rem = n % d;
+                if(rem === 0) return `<span>${toGujarati(w)}</span>`;
+                if(w === 0) return `<div class="fraction-text"><div class="fraction-col"><span>${toGujarati(rem)}</span><span>${toGujarati(d)}</span></div></div>`;
+                
+                return `<div class="fraction-text"><span>${toGujarati(w)}</span><div class="fraction-col"><span>${toGujarati(rem)}</span><span>${toGujarati(d)}</span></div></div>`;
+            }
+        }
+
+        function nextQuestion() {
+            if(currentQuestion >= totalQuestions) {
+                endGame();
+                return;
+            }
+            currentQuestion++;
+            updateScoreBoard();
+
+            let types = ['proper', 'improper', 'mixed'];
+            let qType = types[Math.floor(Math.random() * types.length)];
+            let num, den;
+
+            if (qType === 'proper') {
+                den = Math.floor(Math.random() * 5) + 3; // 3 થી 7
+                num = Math.floor(Math.random() * (den - 1)) + 1;
+            } else { 
+                den = Math.floor(Math.random() * 3) + 3; // 3 થી 5
+                if (Math.random() > 0.5) den = 4; // Grid માટે 4 શક્યતા વધારવા
+                let whole = Math.floor(Math.random() * 2) + 1; // 1 થી 2
+                let rem = Math.floor(Math.random() * (den - 1)) + 1;
+                num = (whole * den) + rem;
+            }
+
+            document.getElementById('svg-container').innerHTML = createSVG(num, den);
+
+            let optsData = [{n: num, d: den}];
+            
+            function isDup(n, d) { return optsData.some(o => o.n/o.d === n/d); }
+
+            let attempts = 0;
+            while(optsData.length < 4 && attempts < 50) {
+                attempts++;
+                let dn = num + (Math.floor(Math.random() * 5) - 2); 
+                let dd = den + (Math.floor(Math.random() * 3) - 1); 
+                
+                if(dn <= 0) dn = 1;
+                if(dd <= 1) dd = 2;
+                
+                if(!isDup(dn, dd)) optsData.push({n: dn, d: dd});
+            }
+
+            optsData.sort(() => Math.random() - 0.5);
+
+            let optionsHtml = '';
+            optsData.forEach(opt => {
+                let isCorrect = (opt.n === num && opt.d === den);
+                let label = getHTMLOption(qType, opt.n, opt.d);
+                optionsHtml += `<button class="option-btn" onclick="checkAnswer(this, ${isCorrect})">${label}</button>`;
+            });
+            
+            document.getElementById('options-container').innerHTML = optionsHtml;
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            let buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if(isCorrect) {
+                btn.style.backgroundColor = '#4CAF50';
+                btn.style.boxShadow = '0 6px #2E7D32';
+                score += 10;
+            } else {
+                btn.style.backgroundColor = '#F44336';
+                btn.style.boxShadow = '0 6px #C62828';
+            }
+            
+            updateScoreBoard();
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 800);
+        }
+
+        function updateScoreBoard() {
+            document.getElementById('q-num').innerText = toGujarati(currentQuestion);
+            document.getElementById('score').innerText = toGujarati(score);
+        }
+
+        function endGame() {
+            document.getElementById("game-section").style.display = "none";
+            document.getElementById("win-screen").style.display = "block";
+
+            let resultHTML = `<h2 style="color:#00796B; font-size: 28px;">તમારો સ્કોર: ${toGujarati(score)} / ${toGujarati(100)}</h2>`;
+
+            if(score >= 40) {
+                resultHTML += `<div class="trophy">🏆</div><h2 style="color:#E65100; font-size: 32px;">અભિનંદન!</h2><p style="font-size: 20px;">તમે ખૂબ સરસ રમ્યા!</p>`;
+            } else {
+                resultHTML += `<h2 style="color:#C62828; font-size: 28px;">ફરી પ્રયત્ન કરો!</h2><p style="font-size: 18px;">વધુ પ્રેક્ટિસની જરૂર છે.</p>`;
+            }
+            
+            resultHTML += `<button class="option-btn play-again-btn" style="margin: 20px auto;" onclick="initGame()">ફરીથી રમો</button>`;
+            
+            document.getElementById('win-content').innerHTML = resultHTML;
+        }
+
+        // ગેમ શરૂ કરો
+        initGame();
+    </script>
+</body>
+</html>

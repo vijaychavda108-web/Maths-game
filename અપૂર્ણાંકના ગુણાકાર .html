@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અપૂર્ણાંકના ગુણાકાર - રંગ પૂરો</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mukta Vaani', sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        .game-wrapper {
+            background: white;
+            max-width: 900px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            overflow: hidden;
+            text-align: center;
+            border: 5px solid #00796b;
+        }
+
+        .header {
+            background-color: #00796b;
+            color: white;
+            padding: 15px;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 30px;
+            font-size: 20px;
+            background-color: #e0f2f1;
+            font-weight: bold;
+            color: #004d40;
+            border-bottom: 2px solid #b2dfdb;
+        }
+
+        .question-area {
+            padding: 15px;
+        }
+
+        .question-text {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .equation-box {
+            font-size: 32px;
+            font-weight: bold;
+            color: #d32f2f;
+            background: #ffebee;
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 15px;
+            border: 2px dashed #f44336;
+            margin-bottom: 15px;
+        }
+
+        /* રંગ પૂરવાનું કેનવાસ */
+        .canvas-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background-color: #fafafa;
+            border: 2px solid #ccc;
+            border-radius: 15px;
+            min-height: 200px;
+            margin: 0 20px;
+        }
+
+        /* પીંછીનું કર્સર */
+        .brush-cursor {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>🖌️</text></svg>") 0 24, auto;
+        }
+
+        .paintable {
+            transition: opacity 0.2s, fill 0.2s;
+        }
+        .paintable:hover {
+            opacity: 0.7;
+        }
+
+        /* કલર પેલેટ (રંગની ટ્રે) */
+        .tools-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eceff1;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .palette-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #455a64;
+        }
+
+        .color-tray {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .swatch {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            border: 4px solid transparent;
+            transition: transform 0.2s;
+        }
+        
+        .swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch.active {
+            border-color: #333 !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+        }
+
+        .actions {
+            margin: 20px;
+        }
+
+        .btn-check {
+            padding: 12px 30px;
+            font-size: 22px;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #1b5e20;
+            transition: all 0.1s;
+        }
+        .btn-check:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        .message-box {
+            height: 35px;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* મંકી એનિમેશન */
+        .monkey-scene {
+            position: relative;
+            height: 140px;
+            background-color: #81d4fa; 
+            overflow: hidden;
+            border-top: 3px solid #4fc3f7;
+        }
+
+        .yellow-ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background-color: #ffeb3b; 
+            border-top: 4px solid #fbc02d;
+        }
+
+        .monkey {
+            position: absolute;
+            bottom: 40px;
+            left: 5%;
+            font-size: 60px;
+            transition: left 0.8s ease;
+            z-index: 5;
+        }
+
+        .footer {
+            background-color: #263238;
+            color: #ffca28;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        @keyframes monkeyJump {
+            0% { transform: translateY(0); }
+            30% { transform: translateY(-70px); }
+            70% { transform: translateY(-70px) rotate(360deg); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes monkeyCry {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-15px); }
+            40%, 80% { transform: translateX(15px); }
+        }
+
+        .jump-anim { animation: monkeyJump 1.2s ease; }
+        .cry-anim { animation: monkeyCry 0.5s ease infinite; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="header">અપૂર્ણાંકના ગુણાકાર (રંગ પૂરો)</div>
+    
+    <div class="scoreboard">
+        <div>પ્રશ્ન: <span id="q-count">1</span>/10</div>
+        <div>સ્કોર: <span id="score">0</span></div>
+    </div>
+
+    <div id="game-play">
+        <div class="question-area">
+            <div class="question-text">નીચે આપેલા ગુણાકાર મુજબ આકૃતિના સાચા ભાગમાં રંગ પૂરો:</div>
+            <div class="equation-box" id="equation-display">...</div>
+        </div>
+
+        <div class="canvas-area" id="canvas-area"></div>
+
+        <div class="tools-area">
+            <div class="palette-title">🎨 નીચેથી રંગ પસંદ કરો અને આકૃતિ પર ટચ કરો 🖌️</div>
+            <div class="color-tray">
+                <div class="swatch" style="background-color: #f44336;" onclick="selectColor('#f44336', this)"></div>
+                <div class="swatch" style="background-color: #2196f3;" onclick="selectColor('#2196f3', this)"></div>
+                <div class="swatch" style="background-color: #4caf50;" onclick="selectColor('#4caf50', this)"></div>
+                <div class="swatch" style="background-color: #ff9800;" onclick="selectColor('#ff9800', this)"></div>
+                <div class="swatch" style="background-color: #9c27b0;" onclick="selectColor('#9c27b0', this)"></div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-check" onclick="checkAnswer()">જવાબ ચકાસો ✔️</button>
+        </div>
+        <div class="message-box" id="msg"></div>
+    </div>
+
+    <div id="game-over" class="hidden" style="padding: 50px;">
+        <h1>રમત પૂર્ણ! 🎯</h1>
+        <h2 style="color: #00796b;">તમારો સ્કોર: <span id="final-score"></span> / 100</h2>
+        <button class="btn-check" onclick="initGame()" style="margin-top:20px;">ફરીથી રમો 🔄</button>
+    </div>
+
+    <div class="monkey-scene">
+        <div class="yellow-ground"></div>
+        <div class="monkey" id="monkey">🐒</div>
+    </div>
+
+    <div class="footer">
+        created by . વિજયકુમાર ચાવડા અને શાળા.દાદાના મુવાડા પ્રા.શાળા
+    </div>
+</div>
+
+<script>
+    let score = 0;
+    let currentQ = 0;
+    let monkeyPos = 5;
+    let selectedColor = null;
+    let isProcessing = false;
+
+    // સુધારેલ પ્રશ્નો (અહીં ગુણાકારનો પહેલો અંક જ આકૃતિઓની સંખ્યા - shapes નક્કી કરે છે)
+    const questions = [
+        { eq: "3 × 1/5", shapes: 3, type: "rect", parts: 5, expected: 3 },
+        { eq: "2 × 1/3", shapes: 2, type: "circle", parts: 3, expected: 2 },
+        { eq: "3 × 3/4", shapes: 3, type: "triangle", parts: 4, expected: 9 },
+        { eq: "3 × 1/4", shapes: 3, type: "circle", parts: 4, expected: 3 },
+        { eq: "2 × 1/5", shapes: 2, type: "circle", parts: 5, expected: 2 },
+        { eq: "3 × 2/3", shapes: 3, type: "rect", parts: 3, expected: 6 },
+        { eq: "2 × 1/2", shapes: 2, type: "circle", parts: 2, expected: 2 },
+        { eq: "4 × 1/3", shapes: 4, type: "rect", parts: 3, expected: 4 },
+        { eq: "2 × 3/5", shapes: 2, type: "circle", parts: 5, expected: 6 },
+        { eq: "3 × 1/2", shapes: 3, type: "rect", parts: 2, expected: 3 }
+    ];
+
+    function getBlankSVG(type, parts, size = 110) {
+        let svg = `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="margin: 5px;">`;
+        const defaultFill = "#ffffff";
+        
+        if (type === 'circle') {
+            const cx = 50, cy = 50, r = 48;
+            for (let i = 0; i < parts; i++) {
+                const startAngle = (i * 2 * Math.PI) / parts - Math.PI / 2;
+                const endAngle = ((i + 1) * 2 * Math.PI) / parts - Math.PI / 2;
+                const x1 = cx + r * Math.cos(startAngle);
+                const y1 = cy + r * Math.sin(startAngle);
+                const x2 = cx + r * Math.cos(endAngle);
+                const y2 = cy + r * Math.sin(endAngle);
+                const largeArc = (2 * Math.PI / parts) > Math.PI ? 1 : 0;
+                
+                if (parts === 1) {
+                    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${defaultFill}" stroke="#000" stroke-width="2" class="paintable" onclick="paintPart(this)"/>`;
+                } else if (parts === 2) {
+                    let d = i === 0 ? `M 50 2 A 48 48 0 0 1 50 98 Z` : `M 50 2 A 48 48 0 0 0 50 98 Z`;
+                    svg += `<path d="${d}" fill="${defaultFill}" stroke="#000" stroke-width="2" class="paintable" onclick="paintPart(this)"/>`;
+                } else {
+                    svg += `<path d="M 50 50 L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${defaultFill}" stroke="#000" stroke-width="2" class="paintable" onclick="paintPart(this)"/>`;
+                }
+            }
+        } 
+        else if (type === 'rect') {
+            // લંબચોરસને ઊભા ભાગમાં વહેંચવો
+            const step = 100 / parts;
+            for (let i = 0; i < parts; i++) {
+                svg += `<rect x="${i * step}" y="10" width="${step}" height="80" fill="${defaultFill}" stroke="#000" stroke-width="2" class="paintable" onclick="paintPart(this)"/>`;
+            }
+        } 
+        else if (type === 'triangle') {
+            // 4 ભાગવાળો ત્રિકોણ (પાઠ્યપુસ્તક મુજબ)
+            if(parts === 4) {
+                svg += `<polygon points="50,5 95,90 5,90" fill="none" stroke="#000" stroke-width="2"/>`;
+                const tris = [
+                    "50,5 72.5,47.5 27.5,47.5", 
+                    "27.5,47.5 50,90 5,90",     
+                    "72.5,47.5 95,90 50,90",    
+                    "27.5,47.5 72.5,47.5 50,90" 
+                ];
+                tris.forEach(p => {
+                    svg += `<polygon points="${p}" fill="${defaultFill}" stroke="#000" stroke-width="2" class="paintable" onclick="paintPart(this)"/>`;
+                });
+            }
+        }
+        svg += `</svg>`;
+        return svg;
+    }
+
+    function initGame() {
+        score = 0;
+        currentQ = 0;
+        monkeyPos = 5;
+        document.getElementById('game-over').classList.add('hidden');
+        document.getElementById('game-play').classList.remove('hidden');
+        document.getElementById('monkey').style.left = "5%";
+        document.getElementById('monkey').textContent = "🐒";
+        
+        // રમત શરૂ થતાં પ્રશ્નોને શફલ (આડાઅવળા) કરવા
+        questions.sort(() => Math.random() - 0.5);
+        
+        loadQuestion();
+    }
+
+    function selectColor(colorCode, element) {
+        selectedColor = colorCode;
+        
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        element.classList.add('active');
+
+        // પીંછીનું કર્સર સક્રિય કરવું
+        document.getElementById('canvas-area').classList.add('brush-cursor');
+    }
+
+    function paintPart(element) {
+        if (!selectedColor || isProcessing) return;
+        
+        // જો પહેલેથી કલર હોય તો કાઢી નાખે, નહીંતર પૂરે
+        let currentFill = element.getAttribute('fill');
+        if (currentFill === selectedColor) {
+            element.setAttribute('fill', '#ffffff');
+        } else {
+            element.setAttribute('fill', selectedColor);
+        }
+    }
+
+    function loadQuestion() {
+        isProcessing = false;
+        selectedColor = null;
+        document.getElementById('canvas-area').classList.remove('brush-cursor');
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        
+        document.getElementById('msg').textContent = "";
+        document.getElementById('score').textContent = score;
+        document.getElementById('q-count').textContent = currentQ + 1;
+
+        let qData = questions[currentQ];
+        document.getElementById('equation-display').textContent = qData.eq;
+
+        const canvas = document.getElementById('canvas-area');
+        canvas.innerHTML = "";
+        
+        // પ્રશ્નની 'shapes' પ્રોપર્ટી મુજબ ખાલી આકૃતિઓ દોરો (દા.ત. 3 × 1/4 માટે 3 આકૃતિઓ)
+        for(let i = 0; i < qData.shapes; i++) {
+            canvas.innerHTML += getBlankSVG(qData.type, qData.parts);
+        }
+    }
+
+    function checkAnswer() {
+        if (isProcessing) return;
+        
+        let qData = questions[currentQ];
+        let coloredCount = 0;
+        
+        document.querySelectorAll('.paintable').forEach(el => {
+            if (el.getAttribute('fill') !== '#ffffff') {
+                coloredCount++;
+            }
+        });
+
+        isProcessing = true;
+        const msg = document.getElementById('msg');
+        const monkey = document.getElementById('monkey');
+
+        // જેટલા ભાગ રંગવાના છે (expected) તેની ચકાસણી
+        if (coloredCount === qData.expected) {
+            score += 10;
+            msg.textContent = "અદ્ભુત! તમારો જવાબ સાચો છે. 🌟";
+            msg.style.color = "green";
+            
+            monkey.textContent = "🐵";
+            monkey.classList.add('jump-anim');
+            monkeyPos += 8;
+            monkey.style.left = monkeyPos + "%";
+            
+            setTimeout(() => {
+                monkey.classList.remove('jump-anim');
+                monkey.textContent = "🐒";
+                goNext();
+            }, 1500);
+        } else {
+            msg.textContent = `ખોટું! તમારે ${qData.expected} ભાગમાં રંગ પૂરવાનો હતો. 😟`;
+            msg.style.color = "red";
+            
+            monkey.textContent = "😿";
+            monkey.classList.add('cry-anim');
+            
+            setTimeout(() => {
+                monkey.classList.remove('cry-anim');
+                monkey.textContent = "🐒";
+                goNext(); 
+            }, 2000);
+        }
+    }
+
+    function goNext() {
+        currentQ++;
+        if (currentQ < questions.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('game-over').classList.remove('hidden');
+            document.getElementById('final-score').textContent = score;
+        }
+    }
+
+    window.onload = initGame;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અપૂર્ણાંકના ગુણાકાર - ચિત્ર આધારિત</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mukta Vaani', sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-wrapper {
+            background: white;
+            max-width: 850px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            overflow: hidden;
+            text-align: center;
+            border: 5px solid #00796b;
+        }
+
+        .header {
+            background-color: #00796b;
+            color: white;
+            padding: 15px;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 30px;
+            font-size: 20px;
+            background-color: #e0f2f1;
+            font-weight: bold;
+            color: #004d40;
+            border-bottom: 2px solid #b2dfdb;
+        }
+
+        .question-area {
+            padding: 20px;
+            background-color: #e8eaf6;
+            margin: 20px;
+            border-radius: 15px;
+            border: 2px dashed #3f51b5;
+        }
+
+        .question-text {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .question-visuals-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        /* આંકડામાં જવાબ લખવા માટેનું બોક્સ */
+        .answer-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff8e1;
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+        }
+
+        .answer-label {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d84315;
+            margin-bottom: 15px;
+        }
+
+        .fraction-input-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            height: 50px;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #00796b;
+            border-radius: 8px;
+            outline: none;
+            color: #333;
+        }
+
+        input[type="number"]:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 8px rgba(211, 47, 47, 0.4);
+        }
+
+        .fraction-line {
+            width: 90px;
+            height: 4px;
+            background-color: #333;
+            border-radius: 2px;
+        }
+
+        .actions {
+            margin: 15px;
+        }
+
+        .btn-check {
+            padding: 12px 40px;
+            font-size: 22px;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #1b5e20;
+            transition: all 0.1s;
+        }
+        .btn-check:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        .message-box {
+            height: 35px;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* મંકી એનિમેશન */
+        .monkey-scene {
+            position: relative;
+            height: 140px;
+            background-color: #81d4fa; 
+            overflow: hidden;
+            border-top: 3px solid #4fc3f7;
+        }
+
+        .yellow-ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background-color: #ffeb3b; 
+            border-top: 4px solid #fbc02d;
+        }
+
+        .monkey {
+            position: absolute;
+            bottom: 40px;
+            left: 2%;
+            font-size: 60px;
+            transition: left 0.8s ease;
+            z-index: 5;
+        }
+
+        .footer {
+            background-color: #263238;
+            color: #ffca28;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        @keyframes monkeyJump {
+            0% { transform: translateY(0); }
+            30% { transform: translateY(-70px); }
+            70% { transform: translateY(-70px) rotate(360deg); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes monkeyCry {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-15px); }
+            40%, 80% { transform: translateX(15px); }
+        }
+
+        .jump-anim { animation: monkeyJump 1.2s ease; }
+        .cry-anim { animation: monkeyCry 0.5s infinite; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="header">અપૂર્ણાંકના ગુણાકાર (આકૃતિ પરથી આંકડામાં જવાબ)</div>
+    
+    <div class="scoreboard">
+        <div>પ્રશ્ન: <span id="q-count">1</span>/10</div>
+        <div>સ્કોર: <span id="score">0</span></div>
+    </div>
+
+    <div id="game-play">
+        <div class="question-area">
+            <div class="question-text">નીચે આપેલી આકૃતિઓનો ગુણાકાર કરો અને જવાબ લખો:</div>
+            <div class="question-visuals-box" id="question-visuals">
+                </div>
+        </div>
+
+        <div class="answer-area">
+            <div class="answer-label">👉 તમારો જવાબ આંકડામાં નીચે લખો 👈</div>
+            <div class="fraction-input-box">
+                <input type="number" id="num-input" placeholder="અંશ" min="1">
+                <div class="fraction-line"></div>
+                <input type="number" id="den-input" placeholder="છેદ" min="1">
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-check" onclick="checkAnswer()">જવાબ ચકાસો ✔️</button>
+        </div>
+        <div class="message-box" id="msg"></div>
+    </div>
+
+    <div id="game-over" class="hidden" style="padding: 50px;">
+        <h1>રમત પૂર્ણ! 🎯</h1>
+        <h2 style="color: #00796b;">તમારો સ્કોર: <span id="final-score"></span> / 100</h2>
+        <button class="btn-check" onclick="initGame()" style="margin-top:20px;">ફરીથી રમો 🔄</button>
+    </div>
+
+    <div class="monkey-scene">
+        <div class="yellow-ground"></div>
+        <div class="monkey" id="monkey">🐒</div>
+    </div>
+
+    <div class="footer">
+        created by . વિજયકુમાર ચાવડા અને શાળા.દાદાના મુવાડા પ્રા.શાળા
+    </div>
+</div>
+
+<script>
+    let score = 0;
+    let currentQ = 0;
+    let monkeyPos = 2;
+    let isProcessing = false;
+
+    // અપૂર્ણાંક × અપૂર્ણાંક (Fraction Multiplication)
+    // n1 = પહેલી આકૃતિના ભરેલા ભાગ, n2 = બીજી આકૃતિના ભરેલા ભાગ
+    // d = બંને આકૃતિઓના સમાન કુલ ભાગ (જેથી આકૃતિ સમાન દેખાય)
+    const questions = [
+        { n1: 1, n2: 1, d: 2, type: "circle" }, // 1/2 × 1/2 = 1/4
+        { n1: 2, n2: 1, d: 3, type: "rect" },   // 2/3 × 1/3 = 2/9
+        { n1: 3, n2: 1, d: 4, type: "circle" }, // 3/4 × 1/4 = 3/16
+        { n1: 2, n2: 2, d: 5, type: "rect" },   // 2/5 × 2/5 = 4/25
+        { n1: 3, n2: 2, d: 5, type: "circle" }, // 3/5 × 2/5 = 6/25
+        { n1: 2, n2: 2, d: 3, type: "rect" },   // 2/3 × 2/3 = 4/9
+        { n1: 1, n2: 1, d: 4, type: "circle" }, // 1/4 × 1/4 = 1/16
+        { n1: 4, n2: 2, d: 5, type: "rect" },   // 4/5 × 2/5 = 8/25
+        { n1: 2, n2: 1, d: 4, type: "circle" }, // 2/4 × 1/4 = 2/16
+        { n1: 3, n2: 2, d: 4, type: "rect" }    // 3/4 × 2/4 = 6/16
+    ];
+
+    // ડાયનેમિક સમાન આકાર બનાવવાનું ફંક્શન
+    function createShapeSVG(type, totalParts, filledParts, size = 110) {
+        let svg = `<svg width="${size}" height="${size}" viewBox="0 0 100 100">`;
+        const defaultFill = "#ffffff";
+        const color = "#ff9800"; // કેસરી રંગ
+        
+        if (type === 'circle') {
+            const cx = 50, cy = 50, r = 48;
+            for (let i = 0; i < totalParts; i++) {
+                const startAngle = (i * 2 * Math.PI) / totalParts - Math.PI / 2;
+                const endAngle = ((i + 1) * 2 * Math.PI) / totalParts - Math.PI / 2;
+                const x1 = cx + r * Math.cos(startAngle);
+                const y1 = cy + r * Math.sin(startAngle);
+                const x2 = cx + r * Math.cos(endAngle);
+                const y2 = cy + r * Math.sin(endAngle);
+                const largeArc = (2 * Math.PI / totalParts) > Math.PI ? 1 : 0;
+                
+                let fillCol = i < filledParts ? color : defaultFill;
+                svg += `<path d="M 50 50 L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${fillCol}" stroke="#333" stroke-width="1.5"/>`;
+            }
+        } 
+        else if (type === 'rect') {
+            const step = 96 / totalParts;
+            for (let i = 0; i < totalParts; i++) {
+                let fillCol = i < filledParts ? color : defaultFill;
+                svg += `<rect x="${2 + i * step}" y="10" width="${step}" height="80" fill="${fillCol}" stroke="#333" stroke-width="1.5"/>`;
+            }
+        } 
+        svg += `</svg>`;
+        return svg;
+    }
+
+    function initGame() {
+        score = 0;
+        currentQ = 0;
+        monkeyPos = 2;
+        document.getElementById('game-over').classList.add('hidden');
+        document.getElementById('game-play').classList.remove('hidden');
+        document.getElementById('monkey').style.left = monkeyPos + "%";
+        document.getElementById('monkey').textContent = "🐒";
+        
+        questions.sort(() => Math.random() - 0.5);
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        isProcessing = false;
+        
+        document.getElementById('msg').textContent = "";
+        document.getElementById('num-input').value = "";
+        document.getElementById('den-input').value = "";
+        
+        document.getElementById('num-input').style.borderColor = "#00796b";
+        document.getElementById('den-input').style.borderColor = "#00796b";
+
+        document.getElementById('score').textContent = score;
+        document.getElementById('q-count').textContent = currentQ + 1;
+
+        let qData = questions[currentQ];
+        const qBox = document.getElementById('question-visuals');
+        
+        let htmlContent = "";
+        
+        // આકૃતિ ૧
+        htmlContent += createShapeSVG(qData.type, qData.d, qData.n1);
+        
+        // વચ્ચે સ્પષ્ટ ગુણાકારની નિશાની
+        htmlContent += `<div style="font-size:55px; font-weight:bold; color:#d32f2f; margin: 0 15px;">×</div>`;
+        
+        // આકૃતિ ૨ (સમાન આકાર, સમાન કુલ ભાગ)
+        htmlContent += createShapeSVG(qData.type, qData.d, qData.n2);
+        
+        // = નિશાની
+        htmlContent += `<div style="font-size:55px; font-weight:bold; margin: 0 15px;">=</div>`;
+        htmlContent += `<div style="font-size:65px; font-weight:bold; color: #1976d2;">?</div>`;
+        
+        qBox.innerHTML = htmlContent;
+        
+        document.getElementById('num-input').focus();
+    }
+
+    function checkAnswer() {
+        if (isProcessing) return;
+        
+        let numInput = document.getElementById('num-input');
+        let denInput = document.getElementById('den-input');
+        
+        let userNum = parseInt(numInput.value);
+        let userDen = parseInt(denInput.value);
+        
+        if (isNaN(userNum) || isNaN(userDen)) {
+            alert("કૃપા કરીને અંશ અને છેદ બંનેમાં યોગ્ય આંકડા લખો.");
+            return;
+        }
+
+        isProcessing = true;
+        let qData = questions[currentQ];
+        const msg = document.getElementById('msg');
+        const monkey = document.getElementById('monkey');
+
+        // અપૂર્ણાંકના ગુણાકારનો નિયમ: (અંશ × અંશ) / (છેદ × છેદ)
+        let correctNum = qData.n1 * qData.n2;
+        let correctDen = qData.d * qData.d;
+
+        // ગણતરી ચેક કરવી (અતિસંક્ષિપ્ત રૂપ પણ સ્વીકારશે)
+        let isCorrect = (userNum * correctDen === userDen * correctNum) && userDen !== 0;
+
+        if (isCorrect) {
+            score += 10;
+            msg.textContent = "ખૂબ સરસ! તમારો ગુણાકાર સાચો છે. 🌟";
+            msg.style.color = "green";
+            numInput.style.borderColor = "green";
+            denInput.style.borderColor = "green";
+            
+            monkey.textContent = "🐵";
+            monkey.classList.add('jump-anim');
+            monkeyPos += 9; 
+            monkey.style.left = monkeyPos + "%";
+            
+            setTimeout(() => {
+                monkey.classList.remove('jump-anim');
+                monkey.textContent = "🐒";
+                goNext();
+            }, 1500);
+        } else {
+            msg.textContent = "ખોટો જવાબ! (અંશ × અંશ) અને (છેદ × છેદ) નો ગુણાકાર કરો. 😟";
+            msg.style.color = "red";
+            numInput.style.borderColor = "red";
+            denInput.style.borderColor = "red";
+            
+            monkey.textContent = "😿";
+            monkey.classList.add('cry-anim');
+            
+            setTimeout(() => {
+                monkey.classList.remove('cry-anim');
+                monkey.textContent = "🐒";
+                goNext(); 
+            }, 2500);
+        }
+    }
+
+    function goNext() {
+        currentQ++;
+        if (currentQ < questions.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('game-over').classList.remove('hidden');
+            document.getElementById('final-score').textContent = score;
+        }
+    }
+
+    // Enter કી સપોર્ટ
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !document.getElementById('game-play').classList.contains('hidden')) {
+            checkAnswer();
+        }
+    });
+
+    window.onload = initGame;
+</script>
+
+</body>
+</html>

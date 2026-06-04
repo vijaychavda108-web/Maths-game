@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અપૂર્ણાંકના જોડકા જોડો</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mukta Vaani', sans-serif;
+        }
+
+        body {
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        .game-wrapper {
+            background: white;
+            max-width: 900px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            overflow: hidden;
+            text-align: center;
+            border: 5px solid #00796b;
+        }
+
+        .header {
+            background-color: #00796b;
+            color: white;
+            padding: 15px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background-color: #fff9c4;
+            color: #f57f17;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 2px solid #fbc02d;
+        }
+
+        .game-board {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .column-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Draggable Equation Items */
+        .draggable-item {
+            background-color: #e3f2fd;
+            border: 3px solid #1976d2;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0d47a1;
+            cursor: grab;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: none; /* For better mobile handling */
+        }
+        
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        .draggable-item.selected {
+            background-color: #bbdefb;
+            box-shadow: 0 0 15px #2196f3;
+            transform: scale(1.05);
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 26px;
+            line-height: 1.1;
+        }
+        
+        .fraction span:first-child {
+            border-bottom: 3px solid #0d47a1;
+            padding: 0 5px;
+        }
+
+        /* Drop Zones (SVGs) */
+        .drop-zone {
+            background-color: #fafafa;
+            border: 3px dashed #9e9e9e;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .drop-zone.drag-over {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .drop-zone.matched {
+            background-color: #e8f5e9;
+            border: 3px solid #4caf50;
+        }
+
+        .svg-container {
+            display: flex;
+            gap: 10px;
+            pointer-events: none; /* Let drag events pass to drop-zone */
+        }
+
+        /* Correct / Incorrect Feedback */
+        .feedback-emoji {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        .error-shake {
+            animation: shake 0.4s ease-in-out;
+            border-color: #f44336 !important;
+            background-color: #ffebee !important;
+        }
+
+        .footer {
+            background-color: #263238;
+            color: #ffca28;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* Game Over Screen */
+        #celebration {
+            padding: 40px;
+        }
+        .btn-replay {
+            padding: 12px 30px;
+            font-size: 22px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="header">અપૂર્ણાંકના જોડકા જોડો 🧩</div>
+    <div class="instructions">👉 ગુણાકારના બોક્સને પકડીને (Drag) સાચી આકૃતિ પર મૂકો (Drop). મોબાઈલમાં ટચ કરીને પણ જોડી શકાશે.</div>
+    
+    <div id="game-play" class="game-board">
+        <div class="column" id="equations-col">
+            <div class="column-title">ગુણાકાર</div>
+            </div>
+
+        <div class="column" id="svgs-col">
+            <div class="column-title">આકૃતિ</div>
+            </div>
+    </div>
+
+    <div id="celebration" class="hidden">
+        <h1 style="font-size: 50px;">🎉 ખૂબ સરસ! 🎉</h1>
+        <h2 style="color: #2e7d32;">તમે બધા જોડકા સાચા જોડ્યા છે!</h2>
+        <div style="font-size: 80px;">🐒 🏆 🐒</div>
+        <button class="btn-replay" onclick="initGame()">ફરીથી રમો 🔄</button>
+    </div>
+
+    <div class="footer">
+        created by . વિજયકુમાર ચાવડા શાળા. દાદાના મુવાડા
+    </div>
+</div>
+
+<script>
+    // પ્રશ્નોનો ડેટા (પાઠ્યપુસ્તકના આધારે)
+    // p1 = (i) -> (d), p2 = (ii) -> (b), p3 = (iii) -> (a), p4 = (iv) -> (c)
+    const pairsData = [
+        { id: 'p1', multiplier: 2, num: 1, den: 5, svgType: 'circle-5' },
+        { id: 'p2', multiplier: 2, num: 1, den: 2, svgType: 'rect-2' },
+        { id: 'p3', multiplier: 3, num: 2, den: 3, svgType: 'circle-3' },
+        { id: 'p4', multiplier: 3, num: 1, den: 4, svgType: 'rect-4' }
+    ];
+
+    let matchedCount = 0;
+    let selectedItem = null; // For mobile touch fallback
+
+    // SVG બનાવવાનું ડાયનેમિક ફંક્શન
+    function createSVG(type, multiplier) {
+        let svgHtml = `<div class="svg-container">`;
+        const size = 70;
+        const color = "#78909c"; // આકૃતિઓનો ગ્રે/વાદળી રંગ
+        
+        for (let m = 0; m < multiplier; m++) {
+            let svg = `<svg width="${size}" height="${size}" viewBox="0 0 100 100">`;
+            
+            if (type === 'circle-5') {
+                // વર્તુળ - 5 ભાગ, 1 ભરેલો
+                const cx = 50, cy = 50, r = 48;
+                for (let i = 0; i < 5; i++) {
+                    const sA = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+                    const eA = ((i + 1) * 2 * Math.PI) / 5 - Math.PI / 2;
+                    const x1 = cx + r * Math.cos(sA), y1 = cy + r * Math.sin(sA);
+                    const x2 = cx + r * Math.cos(eA), y2 = cy + r * Math.sin(eA);
+                    const fill = i < 1 ? color : "#fff";
+                    svg += `<path d="M 50 50 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z" fill="${fill}" stroke="#333" stroke-width="2"/>`;
+                }
+            } 
+            else if (type === 'rect-2') {
+                // ચોરસ - 2 ઉભા ભાગ, 1 ભરેલો
+                svg += `<rect x="5" y="5" width="45" height="90" fill="${color}" stroke="#333" stroke-width="2"/>`;
+                svg += `<rect x="50" y="5" width="45" height="90" fill="#fff" stroke="#333" stroke-width="2"/>`;
+            }
+            else if (type === 'circle-3') {
+                // વર્તુળ - 3 ભાગ, 2 ભરેલા
+                const cx = 50, cy = 50, r = 48;
+                for (let i = 0; i < 3; i++) {
+                    const sA = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                    const eA = ((i + 1) * 2 * Math.PI) / 3 - Math.PI / 2;
+                    const x1 = cx + r * Math.cos(sA), y1 = cy + r * Math.sin(sA);
+                    const x2 = cx + r * Math.cos(eA), y2 = cy + r * Math.sin(eA);
+                    const fill = i < 2 ? color : "#fff";
+                    svg += `<path d="M 50 50 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z" fill="${fill}" stroke="#333" stroke-width="2"/>`;
+                }
+            }
+            else if (type === 'rect-4') {
+                // ચોરસ - 4 ખાના (2x2), 1 ભરેલો
+                svg += `<rect x="5" y="5" width="45" height="45" fill="${color}" stroke="#333" stroke-width="2"/>`;
+                svg += `<rect x="50" y="5" width="45" height="45" fill="#fff" stroke="#333" stroke-width="2"/>`;
+                svg += `<rect x="5" y="50" width="45" height="45" fill="#fff" stroke="#333" stroke-width="2"/>`;
+                svg += `<rect x="50" y="50" width="45" height="45" fill="#fff" stroke="#333" stroke-width="2"/>`;
+            }
+            
+            svg += `</svg>`;
+            svgHtml += svg;
+        }
+        svgHtml += `</div>`;
+        return svgHtml;
+    }
+
+    // એરે શફલ (આડાઅવળા) કરવા માટે
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function initGame() {
+        matchedCount = 0;
+        selectedItem = null;
+        document.getElementById('celebration').classList.add('hidden');
+        document.getElementById('game-play').classList.remove('hidden');
+        
+        const eqCol = document.getElementById('equations-col');
+        const svgCol = document.getElementById('svgs-col');
+        
+        // ટાઈટલ સિવાયનું જૂનું કન્ટેન્ટ સાફ કરો
+        eqCol.innerHTML = '<div class="column-title">ગુણાકાર</div>';
+        svgCol.innerHTML = '<div class="column-title">આકૃતિ</div>';
+
+        // પ્રશ્નો અને આકૃતિઓને શફલ કરો
+        const eqData = shuffle([...pairsData]);
+        const svgData = shuffle([...pairsData]);
+
+        // ગુણાકાર ના ડ્રેગ બોક્સ બનાવો
+        eqData.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'draggable-item';
+            el.setAttribute('draggable', 'true');
+            el.setAttribute('data-id', item.id);
+            el.id = `drag-${item.id}`;
+            
+            el.innerHTML = `
+                ${item.multiplier} &times; 
+                <div class="fraction">
+                    <span>${item.num}</span>
+                    <span>${item.den}</span>
+                </div>
+            `;
+            
+            // Drag Events (Desktop)
+            el.addEventListener('dragstart', dragStart);
+            el.addEventListener('dragend', dragEnd);
+
+            // Click Events (Mobile/Touch fallback)
+            el.addEventListener('click', () => selectItem(el));
+
+            eqCol.appendChild(el);
+        });
+
+        // આકૃતિઓના ડ્રોપ ઝોન બનાવો
+        svgData.forEach(item => {
+            const zone = document.createElement('div');
+            zone.className = 'drop-zone';
+            zone.setAttribute('data-id', item.id);
+            zone.id = `drop-${item.id}`;
+            
+            zone.innerHTML = createSVG(item.svgType, item.multiplier) + `<div class="feedback-emoji"></div>`;
+            
+            // Drop Events (Desktop)
+            zone.addEventListener('dragover', dragOver);
+            zone.addEventListener('dragleave', dragLeave);
+            zone.addEventListener('drop', dropAction);
+
+            // Click Events (Mobile/Touch fallback)
+            zone.addEventListener('click', () => attemptMatchWithClick(zone));
+
+            svgCol.appendChild(zone);
+        });
+    }
+
+    // --- Drag and Drop Logic (Desktop) ---
+    function dragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.getAttribute('data-id'));
+        setTimeout(() => e.target.style.opacity = "0.5", 0);
+        
+        // જો કોઈ સિલેક્ટ કરેલું હોય તો તેને હટાવો
+        document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('selected'));
+        selectedItem = null;
+    }
+
+    function dragEnd(e) {
+        e.target.style.opacity = "1";
+    }
+
+    function dragOver(e) {
+        e.preventDefault(); // Drop થવા દેવા માટે જરૂરી છે
+        if (!e.currentTarget.classList.contains('matched')) {
+            e.currentTarget.classList.add('drag-over');
+        }
+    }
+
+    function dragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function dropAction(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        
+        if (e.currentTarget.classList.contains('matched')) return;
+
+        const draggedId = e.dataTransfer.getData('text/plain');
+        const targetId = e.currentTarget.getAttribute('data-id');
+        
+        evaluateMatch(draggedId, targetId, e.currentTarget);
+    }
+
+    // --- Mobile Touch Fallback (Click to match) ---
+    function selectItem(el) {
+        if (el.style.visibility === 'hidden') return;
+        
+        document.querySelectorAll('.draggable-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedItem = el;
+    }
+
+    function attemptMatchWithClick(zone) {
+        if (zone.classList.contains('matched') || !selectedItem) return;
+        
+        const draggedId = selectedItem.getAttribute('data-id');
+        const targetId = zone.getAttribute('data-id');
+        
+        evaluateMatch(draggedId, targetId, zone);
+    }
+
+    // --- Core Match Logic ---
+    function evaluateMatch(draggedId, targetId, dropZone) {
+        const draggedEl = document.querySelector(`.draggable-item[data-id='${draggedId}']`);
+        const emoji = dropZone.querySelector('.feedback-emoji');
+
+        if (draggedId === targetId) {
+            // સાચો જવાબ
+            dropZone.classList.add('matched');
+            dropZone.innerHTML = draggedEl.innerHTML + `<div class="feedback-emoji" style="opacity:1; bottom:-10px; right:-10px;">🎉</div>`;
+            
+            draggedEl.style.visibility = "hidden"; // બોક્સ સંતાડી દો
+            matchedCount++;
+            selectedItem = null;
+
+            if (matchedCount === pairsData.length) {
+                setTimeout(() => {
+                    document.getElementById('game-play').classList.add('hidden');
+                    document.getElementById('celebration').classList.remove('hidden');
+                }, 800);
+            }
+        } else {
+            // ખોટો જવાબ
+            dropZone.classList.add('error-shake');
+            emoji.textContent = "😿";
+            emoji.style.opacity = "1";
+            
+            setTimeout(() => {
+                dropZone.classList.remove('error-shake');
+                emoji.style.opacity = "0";
+            }, 600);
+        }
+    }
+
+    window.onload = initGame;
+</script>
+
+</body>
+</html>

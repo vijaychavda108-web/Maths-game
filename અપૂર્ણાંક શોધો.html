@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અપૂર્ણાંક શોધો</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Hind Vadodara', sans-serif;
+        }
+
+        body {
+            background-color: #E0F7FA;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Container Styles */
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        /* Start Screen */
+        .title {
+            color: #FF5722;
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #B2EBF2;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #00BCD4;
+        }
+
+        #error-msg {
+            color: #F44336;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #555;
+            background-color: #F5F5F5;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* Game Screen */
+        #game-screen, #win-screen {
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            background-color: #00BCD4;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .timer-red {
+            color: #F44336;
+        }
+
+        .game-area {
+            background-color: #FFF9C4; /* પીળો રંગ */
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border: 3px solid #FFEB3B;
+            min-height: 180px;
+        }
+
+        .monkey {
+            font-size: 70px;
+            transition: transform 0.3s;
+        }
+
+        /* વાંદરાનું કૂદવાનું એનિમેશન */
+        @keyframes jumpAnim {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+
+        .jump {
+            animation: jumpAnim 0.5s ease 3; /* 3 વખત કૂદશે */
+        }
+
+        .svg-container {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-option {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 22px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+            transition: background-color 0.2s, transform 0.2s;
+            font-weight: 700;
+        }
+
+        .btn-option:hover {
+            background-color: #1976D2;
+            transform: scale(1.05);
+        }
+
+        .btn-option:disabled {
+            background-color: #B0BEC5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Win Screen */
+        .trophy {
+            font-size: 80px;
+            margin-bottom: 10px;
+            animation: bounceIn 1s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .win-title {
+            color: #4CAF50;
+            font-size: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .win-details {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .win-score {
+            font-size: 24px;
+            color: #FF9800;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .game-area {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .monkey {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="sound-correct" src="https://cdn.pixabay.com/audio/2022/03/15/audio_79aba6bd1b.mp3"></audio>
+    <audio id="sound-wrong" src="https://cdn.pixabay.com/audio/2022/03/15/audio_2e29783f8b.mp3"></audio>
+    <audio id="sound-win" src="https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3"></audio>
+
+    <div class="container" id="start-screen">
+        <h1 class="title">અપૂર્ણાંક શોધો</h1>
+        
+        <div id="error-msg">કૃપા કરીને બંને ખાના ફરજિયાત ભરો!</div>
+
+        <div class="input-group">
+            <label for="schoolName">શાળાનું નામ:</label>
+            <input type="text" id="schoolName" placeholder="શાળાનું નામ દાખલ કરો">
+        </div>
+
+        <div class="input-group">
+            <label for="studentName">વિદ્યાર્થીનું નામ:</label>
+            <input type="text" id="studentName" placeholder="તમારું નામ દાખલ કરો">
+        </div>
+
+        <button class="btn-primary" onclick="startGame()">રમત શરૂ કરો ▶</button>
+
+        <div class="footer">
+            <strong>Created by:</strong> વિજય ચાવડા<br>
+            દાદાના મુવાડા પ્રાથમિક શાળા તા. ફાગવેલ જિ.ખેડા
+        </div>
+    </div>
+
+    <div class="container" id="game-screen">
+        <div class="header">
+            <span id="display-student"></span>
+            <span id="display-school"></span>
+        </div>
+
+        <div class="stats">
+            <div id="display-score">સ્કોર: ૦</div>
+            <div id="display-timer">સમય: ૬૦ સેકન્ડ</div>
+        </div>
+
+        <div class="game-area">
+            <div class="monkey" id="monkey-emoji">🐵</div>
+            <div class="svg-container" id="svg-shape">
+                </div>
+        </div>
+
+        <div class="options-grid" id="options-container">
+            </div>
+    </div>
+
+    <div class="container" id="win-screen">
+        <div class="trophy" id="win-icon">🏆</div>
+        <h1 class="win-title" id="win-message">અભિનંદન!</h1>
+        
+        <div class="win-details">
+            વિજેતા વિદ્યાર્થી: <strong id="win-student"></strong><br>
+            શાળા: <strong id="win-school"></strong>
+        </div>
+
+        <div class="win-score" id="win-score-display">
+            તમારો સ્કોર: ૦
+        </div>
+
+        <button class="btn-primary" onclick="resetGame()">નવી રમત શરૂ કરો</button>
+    </div>
+
+    <script>
+        // Gujarati Number Converter
+        function toGujarati(num) {
+            const gujDigits = ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯'];
+            return num.toString().split('').map(d => gujDigits[d] || d).join('');
+        }
+
+        // SVG Shapes Database with specific fractions
+        const shapeData = [
+            { ans: "૧/૨", type: "લંબચોરસ", svg: `<svg viewBox="0 0 100 50" width="100%" height="100%"><rect x="0" y="0" width="50" height="50" fill="#FF5722" stroke="#333" stroke-width="2"/><rect x="50" y="0" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૧/૩", type: "લંબચોરસ", svg: `<svg viewBox="0 0 150 50" width="100%" height="100%"><rect x="0" y="0" width="50" height="50" fill="#4CAF50" stroke="#333" stroke-width="2"/><rect x="50" y="0" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/><rect x="100" y="0" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૨/૩", type: "લંબચોરસ", svg: `<svg viewBox="0 0 150 50" width="100%" height="100%"><rect x="0" y="0" width="50" height="50" fill="#9C27B0" stroke="#333" stroke-width="2"/><rect x="50" y="0" width="50" height="50" fill="#9C27B0" stroke="#333" stroke-width="2"/><rect x="100" y="0" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૧/૪", type: "ચોરસ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="0" y="0" width="50" height="50" fill="#03A9F4" stroke="#333" stroke-width="2"/><rect x="50" y="0" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/><rect x="0" y="50" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/><rect x="50" y="50" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૩/૪", type: "ચોરસ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="0" y="0" width="50" height="50" fill="#E91E63" stroke="#333" stroke-width="2"/><rect x="50" y="0" width="50" height="50" fill="#E91E63" stroke="#333" stroke-width="2"/><rect x="0" y="50" width="50" height="50" fill="#E91E63" stroke="#333" stroke-width="2"/><rect x="50" y="50" width="50" height="50" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૧/૨", type: "ત્રિકોણ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><polygon points="50,10 10,90 50,90" fill="#FFC107" stroke="#333" stroke-width="2"/><polygon points="50,10 90,90 50,90" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૧/૪", type: "ત્રિકોણ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><polygon points="50,10 30,50 70,50" fill="#009688" stroke="#333" stroke-width="2"/><polygon points="10,90 30,50 50,90" fill="#FFF" stroke="#333" stroke-width="2"/><polygon points="90,90 70,50 50,90" fill="#FFF" stroke="#333" stroke-width="2"/><polygon points="30,50 70,50 50,90" fill="#FFF" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૧/૨", type: "વર્તુળ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="45" fill="#FFF" stroke="#333" stroke-width="2"/><path d="M50,5 A45,45 0 0,1 50,95 Z" fill="#8BC34A" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૧/૪", type: "વર્તુળ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="45" fill="#FFF" stroke="#333" stroke-width="2"/><path d="M50,50 L50,5 A45,45 0 0,1 95,50 Z" fill="#FF9800" stroke="#333" stroke-width="2"/></svg>` },
+            { ans: "૩/૪", type: "વર્તુળ", svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="45" fill="#FFF" stroke="#333" stroke-width="2"/><path d="M50,50 L50,5 A45,45 0 1,1 5,50 Z" fill="#673AB7" stroke="#333" stroke-width="2"/></svg>` }
+        ];
+
+        const allFractions = ["૧/૨", "૧/૩", "૨/૩", "૧/૪", "૨/૪", "૩/૪", "૧/૫", "૨/૫", "૩/૫"];
+
+        // Game State Variables
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let currentQuestionCount = 0;
+        let maxQuestions = 10;
+        let currentCorrectAnswer = "";
+        let isWaiting = false;
+        let gameActive = false;
+        
+        let studentNameStr = "";
+        let schoolNameStr = "";
+
+        // Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const winScreen = document.getElementById('win-screen');
+        const errorMsg = document.getElementById('error-msg');
+        const monkey = document.getElementById('monkey-emoji');
+        const svgContainer = document.getElementById('svg-shape');
+        const optionsContainer = document.getElementById('options-container');
+        
+        // Sounds
+        const soundCorrect = document.getElementById('sound-correct');
+        const soundWrong = document.getElementById('sound-wrong');
+        const soundWin = document.getElementById('sound-win');
+
+        function startGame() {
+            const schoolInput = document.getElementById('schoolName').value.trim();
+            const studentInput = document.getElementById('studentName').value.trim();
+
+            if (schoolInput === "" || studentInput === "") {
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            errorMsg.style.display = "none";
+            studentNameStr = studentInput;
+            schoolNameStr = schoolInput;
+
+            document.getElementById('display-student').innerText = `વિદ્યાર્થી: ${studentNameStr}`;
+            document.getElementById('display-school').innerText = `શાળા: ${schoolNameStr}`;
+
+            // Reset Game Variables
+            score = 0;
+            timeLeft = 60;
+            currentQuestionCount = 0;
+            gameActive = true;
+            updateScoreUI();
+            updateTimerUI();
+
+            // Switch Screens
+            startScreen.style.display = "none";
+            gameScreen.style.display = "block";
+            winScreen.style.display = "none";
+
+            startTimer();
+            loadNextQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if(gameActive) {
+                        gameActive = false;
+                        soundWrong.play();
+                        setTimeout(() => {
+                            alert("સમય પૂરો થયો! તમારી રમત સમાપ્ત થઈ.");
+                            resetGame();
+                        }, 500);
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timerEl = document.getElementById('display-timer');
+            timerEl.innerText = `સમય: ${toGujarati(timeLeft)} સેકન્ડ`;
+            if (timeLeft <= 10) {
+                timerEl.classList.add('timer-red');
+            } else {
+                timerEl.classList.remove('timer-red');
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('display-score').innerText = `સ્કોર: ${toGujarati(score)}`;
+        }
+
+        function loadNextQuestion() {
+            if (currentQuestionCount >= maxQuestions) {
+                endGame();
+                return;
+            }
+
+            isWaiting = false;
+            monkey.innerText = "🐵"; // વાંદરો નોર્મલ મૂડમાં
+            monkey.classList.remove('jump');
+
+            // Pick a random shape
+            const randomShape = shapeData[Math.floor(Math.random() * shapeData.length)];
+            currentCorrectAnswer = randomShape.ans;
+            svgContainer.innerHTML = randomShape.svg;
+
+            // Generate Options
+            let options = [currentCorrectAnswer];
+            
+            // Get 3 wrong options
+            let shuffledFractions = allFractions.filter(f => f !== currentCorrectAnswer).sort(() => 0.5 - Math.random());
+            options.push(shuffledFractions[0], shuffledFractions[1], shuffledFractions[2]);
+
+            // Shuffle final options
+            options.sort(() => 0.5 - Math.random());
+
+            // Render Options
+            optionsContainer.innerHTML = "";
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.classList.add('btn-option');
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedAns, btnElement) {
+            if (isWaiting) return;
+            isWaiting = true;
+            currentQuestionCount++;
+
+            // Disable all buttons
+            const buttons = document.querySelectorAll('.btn-option');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedAns === currentCorrectAnswer) {
+                // Correct
+                soundCorrect.currentTime = 0;
+                soundCorrect.play();
+                score += 10;
+                updateScoreUI();
+                monkey.classList.add('jump');
+                btnElement.style.backgroundColor = "#4CAF50"; // લીલો રંગ
+            } else {
+                // Wrong
+                soundWrong.currentTime = 0;
+                soundWrong.play();
+                monkey.innerText = "😭"; // વાંદરો રોવા લાગશે
+                btnElement.style.backgroundColor = "#F44336"; // લાલ રંગ
+                // સાચો જવાબ બતાવો
+                buttons.forEach(b => {
+                    if (b.innerText === currentCorrectAnswer) {
+                        b.style.backgroundColor = "#4CAF50";
+                    }
+                });
+            }
+
+            // 1.5 સેકન્ડ પછી નવો પ્રશ્ન
+            setTimeout(() => {
+                if(gameActive) loadNextQuestion();
+            }, 1500);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            gameScreen.style.display = "none";
+            winScreen.style.display = "block";
+
+            document.getElementById('win-student').innerText = studentNameStr;
+            document.getElementById('win-school').innerText = schoolNameStr;
+            document.getElementById('win-score-display').innerText = `તમારો સ્કોર: ${toGujarati(score)}`;
+
+            const winIcon = document.getElementById('win-icon');
+            const winMessage = document.getElementById('win-message');
+
+            if (score >= 40) {
+                soundWin.play();
+                winIcon.innerText = "🏆";
+                winMessage.innerText = "અભિનંદન!";
+                winMessage.style.color = "#4CAF50";
+            } else {
+                winIcon.innerText = "👍";
+                winMessage.innerText = "સારો પ્રયાસ!";
+                winMessage.style.color = "#FF9800";
+            }
+        }
+
+        function resetGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            // બીજા વિદ્યાર્થી માટે નામ ખાલી કરો, પણ શાળાનું નામ એમજ રહેવા દો
+            document.getElementById('studentName').value = "";
+            
+            winScreen.style.display = "none";
+            gameScreen.style.display = "none";
+            startScreen.style.display = "block";
+        }
+    </script>
+</body>
+</html>
