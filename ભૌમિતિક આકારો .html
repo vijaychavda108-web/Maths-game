@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ભૌમિતિક આકારો ઓળખો</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Mukta Vaani', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #game-container {
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+        }
+
+        header {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 20px;
+            border-bottom: 5px solid #ee5253;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        main {
+            padding: 30px 20px;
+        }
+
+        #question-text {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        #options-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            justify-items: center;
+        }
+
+        .option-card {
+            background-color: #f1f2f6;
+            border: 4px solid #dfe4ea;
+            border-radius: 15px;
+            width: 100%;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            border-color: #7bed9f;
+        }
+
+        .option-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .option-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #57606f;
+        }
+
+        .status-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            display: none;
+        }
+
+        .correct {
+            background-color: #d1ffdf;
+            border-color: #2ed573;
+        }
+
+        .correct .status-icon {
+            display: block;
+        }
+
+        .incorrect {
+            background-color: #ffdce0;
+            border-color: #ff4757;
+        }
+
+        .incorrect .status-icon {
+            display: block;
+        }
+
+        #result-area {
+            padding: 40px 20px;
+        }
+
+        #result-area h2 {
+            font-size: 2.5rem;
+            color: #2ed573;
+            margin-bottom: 20px;
+        }
+
+        #final-score {
+            font-size: 2rem;
+            color: #2f3542;
+            margin-bottom: 15px;
+        }
+
+        #congrats-message {
+            font-size: 1.5rem;
+            color: #ff4757;
+            font-weight: bold;
+            margin-bottom: 30px;
+            animation: pop 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pop {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        button.play-btn {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(30, 144, 255, 0.4);
+            transition: 0.3s;
+        }
+
+        button.play-btn:hover {
+            background-color: #3742fa;
+            transform: scale(1.05);
+        }
+
+        footer {
+            background-color: #2f3542;
+            color: #ffffff;
+            padding: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            #question-text { font-size: 1.4rem; }
+            .option-icon { font-size: 3rem; }
+            .stats { flex-direction: column; gap: 5px; }
+            footer { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <header>
+            <h1>🎈 ભૌમિતિક આકારો ઓળખો 🎈</h1>
+            <div class="stats">
+                <span id="question-count">પ્રશ્ન: 1 / 10</span>
+                <span id="score-display">કુલ ગુણ: 0</span>
+            </div>
+        </header>
+
+        <main id="question-area">
+            <h2 id="question-text">પ્રશ્ન અહીં આવશે...</h2>
+            <div id="options-container">
+                </div>
+        </main>
+
+        <div id="result-area" class="hidden">
+            <h2>રમત પૂરી! 🏆</h2>
+            <p id="final-score"></p>
+            <p id="congrats-message"></p>
+            <button class="play-btn" onclick="startGame()">ફરીથી રમો 🔄</button>
+        </div>
+
+        <footer>
+            created by : વિજયકુમાર ચાવડા &nbsp;&nbsp;|&nbsp;&nbsp; શાળા: દાદાના મુવાડા પ્રા. શાળા
+        </footer>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "આપેલ ચિત્રોમાંથી 'રેખા' (Line) આકાર શોધો (જે બંને બાજુ અનંત હોય):",
+                options: [
+                    { icon: "↔️", name: "સીધી રેખા", correct: true },
+                    { icon: "☀️", name: "સૂર્યપ્રકાશ", correct: false },
+                    { icon: "✏️", name: "પેન્સિલ", correct: false },
+                    { icon: "🛞", name: "પૈડું", correct: false }
+                ]
+            },
+            {
+                question: "એક ઉદ્ભવ બિંદુથી શરૂ થતું 'કિરણ' (Ray) કયું છે?",
+                options: [
+                    { icon: "🧱", name: "ઈંટ", correct: false },
+                    { icon: "🔦", name: "ટોર્ચનો પ્રકાશ", correct: true },
+                    { icon: "🎲", name: "પાસો", correct: false },
+                    { icon: "↔️", name: "રેખા", correct: false }
+                ]
+            },
+            {
+                question: "ચોક્કસ લંબાઈ ધરાવતો 'રેખાખંડ' (Line Segment) કયો છે?",
+                options: [
+                    { icon: "🍕", name: "પિઝા", correct: false },
+                    { icon: "☀️", name: "સૂર્ય", correct: false },
+                    { icon: "✏️", name: "પેન્સિલ", correct: true },
+                    { icon: "🍦", name: "આઈસ્ક્રીમ", correct: false }
+                ]
+            },
+            {
+                question: "ત્રણ બાજુઓ વાળો 'ત્રિકોણ' (Triangle) આકાર શોધો:",
+                options: [
+                    { icon: "🚩", name: "ધજા", correct: true },
+                    { icon: "🔲", name: "કેરમ બોર્ડ", correct: false },
+                    { icon: "🔋", name: "સેલ", correct: false },
+                    { icon: "🪙", name: "સિક્કો", correct: false }
+                ]
+            },
+            {
+                question: "ચારેય બાજુ સરખી હોય તેવો 'ચોરસ' (Square) આકાર કયો છે?",
+                options: [
+                    { icon: "🛞", name: "પૈડું", correct: false },
+                    { icon: "🔲", name: "કેરમ બોર્ડ", correct: true },
+                    { icon: "📕", name: "પુસ્તક", correct: false },
+                    { icon: "🍼", name: "બોટલ", correct: false }
+                ]
+            },
+            {
+                question: "સામસામેની બાજુ સરખી હોય તેવો 'ચતુષ્કોણ/લંબચોરસ' આકાર શોધો:",
+                options: [
+                    { icon: "🎲", name: "પાસો", correct: false },
+                    { icon: "↔️", name: "રેખા", correct: false },
+                    { icon: "📺", name: "ટીવી સ્ક્રીન", correct: true },
+                    { icon: "🍕", name: "પિઝા", correct: false }
+                ]
+            },
+            {
+                question: "ગોળ 'વર્તુળ' (Circle) આકારની વસ્તુ શોધો:",
+                options: [
+                    { icon: "🪙", name: "સિક્કો", correct: true },
+                    { icon: "🧱", name: "ઈંટ", correct: false },
+                    { icon: "🚩", name: "ધજા", correct: false },
+                    { icon: "✏️", name: "પેન્સિલ", correct: false }
+                ]
+            },
+            {
+                question: "જેની બધી બાજુઓ સમાન હોય તેવો 'સમઘન' (Cube) આકાર શોધો:",
+                options: [
+                    { icon: "🍼", name: "બોટલ", correct: false },
+                    { icon: "🎲", name: "રમવાનો પાસો", correct: true },
+                    { icon: "☀️", name: "સૂર્ય", correct: false },
+                    { icon: "🔲", name: "કેરમ બોર્ડ", correct: false }
+                ]
+            },
+            {
+                question: "'લંબઘન' (Cuboid) આકારની વસ્તુ કઈ છે?",
+                options: [
+                    { icon: "🔦", name: "ટોર્ચ", correct: false },
+                    { icon: "🛞", name: "પૈડું", correct: false },
+                    { icon: "🧱", name: "ઈંટ", correct: true },
+                    { icon: "🍦", name: "આઈસ્ક્રીમ", correct: false }
+                ]
+            },
+            {
+                question: "'નળાકાર' (Cylinder) આકારની વસ્તુ શોધો:",
+                options: [
+                    { icon: "🔋", name: "બેટરી સેલ", correct: true },
+                    { icon: "🚩", name: "ધજા", correct: false },
+                    { icon: "🎲", name: "પાસો", correct: false },
+                    { icon: "✏️", name: "પેન્સિલ", correct: false }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionCount = document.getElementById('question-count');
+        const questionArea = document.getElementById('question-area');
+        const resultArea = document.getElementById('result-area');
+        const finalScore = document.getElementById('final-score');
+        const congratsMessage = document.getElementById('congrats-message');
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            isAnswered = false;
+            
+            // શફલ ક્વેશ્ચન (Optional - બાળકો માટે ક્રમ બદલવા)
+            quizData.sort(() => Math.random() - 0.5);
+
+            scoreDisplay.innerText = `કુલ ગુણ: 0`;
+            questionArea.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+            document.querySelector('.stats').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            const currentData = quizData[currentQuestionIndex];
+            
+            questionCount.innerText = `પ્રશ્ન: ${currentQuestionIndex + 1} / ${quizData.length}`;
+            questionText.innerText = currentData.question;
+            
+            optionsContainer.innerHTML = '';
+
+            // શફલ ઓપ્શન્સ
+            let options = [...currentData.options];
+            options.sort(() => Math.random() - 0.5);
+
+            options.forEach((option) => {
+                const card = document.createElement('div');
+                card.classList.add('option-card');
+                
+                card.innerHTML = `
+                    <div class="status-icon"></div>
+                    <div class="option-icon">${option.icon}</div>
+                    <div class="option-name">${option.name}</div>
+                `;
+
+                card.addEventListener('click', () => checkAnswer(card, option.correct, options));
+                optionsContainer.appendChild(card);
+            });
+        }
+
+        function checkAnswer(selectedCard, isCorrect, allOptionsData) {
+            if (isAnswered) return; // એકવાર જવાબ આપ્યા પછી બીજો વિકલ્પ પસંદ નહિ કરી શકાય
+            isAnswered = true;
+
+            const allCards = document.querySelectorAll('.option-card');
+
+            if (isCorrect) {
+                selectedCard.classList.add('correct');
+                selectedCard.querySelector('.status-icon').innerText = '✅';
+                score += 10;
+                scoreDisplay.innerText = `કુલ ગુણ: ${score}`;
+            } else {
+                selectedCard.classList.add('incorrect');
+                selectedCard.querySelector('.status-icon').innerText = '❌';
+                
+                // સાચો જવાબ બતાવો
+                allCards.forEach((card, index) => {
+                    // મૂળ વિકલ્પોના એરે માંથી સાચો વિકલ્પ શોધીએ
+                    let correctIcon = allOptionsData.find(opt => opt.correct).icon;
+                    if(card.querySelector('.option-icon').innerText === correctIcon){
+                        card.classList.add('correct');
+                        card.querySelector('.status-icon').innerText = '✅';
+                    }
+                });
+            }
+
+            // 1.5 સેકન્ડ પછી નવો પ્રશ્ન લાવો
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function showResults() {
+            questionArea.classList.add('hidden');
+            document.querySelector('.stats').classList.add('hidden');
+            resultArea.classList.remove('hidden');
+
+            finalScore.innerText = `તમે 100 માંથી ${score} ગુણ મેળવ્યા છે!`;
+
+            if (score > 70) {
+                congratsMessage.innerText = "🌟 ખૂબ સરસ! ખૂબ ખૂબ અભિનંદન! 🌟";
+                congratsMessage.style.color = "#2ed573";
+            } else {
+                congratsMessage.innerText = "વધુ પ્રેક્ટિસ કરો, તમે વધુ સારું કરી શકો છો! 👍";
+                congratsMessage.style.color = "#ffa502";
+            }
+        }
+
+        // ગેમ શરૂ કરો
+        startGame();
+
+    </script>
+</body>
+</html>

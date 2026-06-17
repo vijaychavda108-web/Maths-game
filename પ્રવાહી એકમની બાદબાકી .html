@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>પ્રવાહીના એકમની બાદબાકી - ધોરણ ૬ થી ૮</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; font-family: 'Mukta Vaani', sans-serif; }
+
+        body {
+            background-color: #E8F5E9; margin: 0; padding: 15px;
+            text-align: center; color: #333; 
+            user-select: none; 
+            touch-action: manipulation; 
+        }
+
+        .game-container {
+            background-color: #FFFFFF; max-width: 950px; margin: 0 auto;
+            border-radius: 20px; padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 5px solid #43A047;
+        }
+
+        h1 { color: #1B5E20; font-size: 34px; margin-top: 0; text-shadow: 1px 1px #C8E6C9; }
+
+        .info-bar {
+            display: flex; justify-content: space-between; background-color: #E8F5E9;
+            padding: 10px 20px; border-radius: 15px; font-size: 22px;
+            font-weight: bold; color: #2E7D32; margin-bottom: 15px;
+            border: 2px dashed #81C784;
+        }
+
+        .instruction {
+            font-size: 18px; color: #E65100; margin-bottom: 20px;
+            background: #FFF3E0; padding: 15px; border-radius: 10px;
+            border: 2px solid #FFCC80; font-weight: bold;
+        }
+
+        .equation-area {
+            background-color: #F5F5F5; padding: 25px 15px; border-radius: 15px;
+            margin-bottom: 25px; display: flex; align-items: center;
+            justify-content: center; flex-wrap: wrap; gap: 10px;
+            font-size: 36px; font-weight: bold; color: #424242;
+            border: 2px inset #E0E0E0;
+        }
+
+        .initial-box {
+            background: #1976D2; padding: 10px 20px; border-radius: 12px;
+            color: white; border: 4px solid #0D47A1; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            font-size: 24px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .static-item, .drop-zone {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 12px; padding: 10px; min-width: 100px; height: 110px;
+        }
+
+        .static-item { background-color: #FFF; border: 3px solid #D32F2F; box-shadow: 0 3px 5px rgba(0,0,0,0.1); }
+
+        .item-icon { font-size: 40px; line-height: 1.2; pointer-events: none; }
+        .item-label { font-size: 16px; margin-top: 5px; color: #333; line-height: 1.2; font-weight: bold; pointer-events: none; }
+        .item-name { font-size: 12px; color: #666; margin-top: 2px; pointer-events: none; }
+
+        .drop-zone {
+            width: 110px; border: 4px dashed #D32F2F; background-color: #FFEBEE;
+            font-size: 16px; color: #C62828; transition: 0.3s;
+        }
+
+        .drop-zone.highlight { background-color: #FFCDD2; border-color: #B71C1C; transform: scale(1.05); }
+        .drop-zone.filled { border: 4px solid #FBC02D; background-color: #FFFDE7; cursor: pointer; color: #333; }
+
+        .target-box {
+            background:#388E3C; padding:10px 25px; border-radius:12px; 
+            color:white; border:4px solid #1B5E20; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            font-size: 28px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .items-tray {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;
+            padding: 20px; background-color: #E3F2FD; border-radius: 15px;
+            border: 3px solid #64B5F6; margin-bottom: 20px;
+        }
+
+        .draggable-item {
+            display: flex; flex-direction: column; align-items: center;
+            background-color: #FFF; border: 3px solid #1976D2;
+            border-radius: 12px; padding: 10px; min-width: 100px;
+            cursor: grab; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            touch-action: none; 
+            transition: transform 0.2s;
+        }
+
+        .draggable-item:active { cursor: grabbing; opacity: 0.7; }
+        .draggable-item:hover { transform: translateY(-3px); }
+
+        .controls { margin-top: 20px; }
+
+        .btn {
+            padding: 14px 30px; font-size: 22px; font-weight: bold;
+            border: none; border-radius: 12px; cursor: pointer;
+            color: white; box-shadow: 0 5px 10px rgba(0,0,0,0.2); margin: 5px;
+            transition: 0.2s;
+        }
+
+        .btn-check { background-color: #F57C00; border: 2px solid #E65100; }
+        .btn-check:active { transform: translateY(3px); }
+        .btn-next { background-color: #2196F3; border: 2px solid #1565C0; display: none; }
+        .btn-next:active { transform: translateY(3px); }
+
+        .feedback-message { font-size: 28px; font-weight: bold; margin-top: 15px; min-height: 45px; }
+        .feedback-correct { color: #2E7D32; animation: pop 0.5s; display: block; }
+        .feedback-wrong { color: #D32F2F; animation: shake 0.5s; display: block; }
+
+        .footer { margin-top: 30px; font-size: 18px; color: #424242; font-weight: bold; padding: 15px; background: #E0E0E0; border-radius: 10px; }
+
+        .end-screen { display: none; flex-direction: column; align-items: center; padding: 40px 10px; }
+        .end-title { font-size: 42px; color: #1B5E20; }
+        .end-score { font-size: 36px; color: #2E7D32; margin: 20px 0; }
+
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        @media (max-width: 600px) {
+            .equation-area { font-size: 24px; padding: 15px 5px; gap: 5px; }
+            .drop-zone, .static-item, .draggable-item { min-width: 75px; width: 80px; height: 95px; padding: 5px; }
+            .item-icon { font-size: 30px; }
+            .item-label { font-size: 13px; }
+            .initial-box { font-size: 18px; padding: 8px 12px; }
+            .target-box { font-size: 20px; padding: 8px 15px; }
+            h1 { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="gameScreen">
+    <h1>પ્રવાહીના એકમની બાદબાકી (ધોરણ ૬ થી ૮)</h1>
+    
+    <div class="info-bar">
+        <div id="questionNumber">પ્રશ્ન: ૧ / ૧૦</div>
+        <div id="scoreBoard">ગુણ: ૦</div>
+    </div>
+
+    <div class="instruction">
+        👉 <b>પડકાર:</b> આપેલા કુલ માપમાંથી <b>કેટલું માપ બાદ કરીએ</b> તો જવાબ સાચો મળે? ખાલી જગ્યાઓમાં યોગ્ય વસ્તુઓ મૂકો.<br>
+        <span style="color:#D32F2F; font-size:16px;">(ધ્યાન રાખજો: જો જવાબ ખોટો પડશે, તો ફરી પ્રયત્ન કરવાની તક મળશે નહિ!)</span>
+    </div>
+
+    <div class="equation-area" id="equationArea">
+        <!-- પ્રશ્ન અહી દેખાશે -->
+    </div>
+
+    <div class="items-tray" id="itemsTray">
+        <!-- ડ્રેગ કરવા માટેની વસ્તુઓ -->
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-check" id="checkBtn" onclick="checkAnswer()">જવાબ લોક કરો 🔒</button>
+        <button class="btn btn-next" id="nextBtn" onclick="nextQuestion()">આગળનો પ્રશ્ન ➔</button>
+    </div>
+
+    <div id="feedbackBox" class="feedback-message"></div>
+
+    <div class="footer">
+        created by . વિજયકુમાર ચાવડા શાળા. દાદાના મુવાડા પ્રા.શાળા
+    </div>
+</div>
+
+<div class="game-container end-screen" id="endScreen">
+    <h1 class="end-title">ગેમ પૂરી થઈ! 🏁</h1>
+    <div id="finalScoreText" class="end-score"></div>
+    <div id="congratsMsg" style="font-size: 26px; font-weight: bold; color: #E65100; margin-bottom: 25px; line-height: 1.5;"></div>
+    <button class="btn btn-next" style="display:inline-block;" onclick="location.reload()">ફરીથી રમો 🔄</button>
+    <div class="footer">
+        created by . વિજયકુમાર ચાવડા શાળા. દાદાના મુવાડા પ્રા.શાળા
+    </div>
+</div>
+
+<script>
+    const itemsData = [
+        { id: 'milk', name: 'દૂધની થેલી', val: 500, label: '૫૦૦ મિલી', icon: '🥛' },
+        { id: 'water', name: 'પાણીની બોટલ', val: 1000, label: '૧ લિટર', icon: '💧' },
+        { id: 'med', name: 'દવાની બોટલ', val: 100, label: '૧૦૦ મિલી', icon: '🧴' },
+        { id: 'cap', name: 'ઢાંકણું', val: 5, label: '૫ મિલી', icon: '🥄' },
+        { id: 'syringe', name: 'સિરીંજ', val: 10, label: '૧૦ મિલી', icon: '💉' },
+        { id: 'oil', name: 'તેલનું કેન', val: 5000, label: '૫ લિટર', icon: '🛢️' },
+        { id: 'glass', name: 'કાંચની બોટલ', val: 200, label: '૨૦૦ મિલી', icon: '🍾' },
+        { id: 'shampoo', name: 'શેમ્પુ', val: 50, label: '૫૦ મિલી', icon: '🧴' }
+    ];
+
+    // બાદબાકી માટે અઘરા પ્રશ્નોની યાદી
+    const questionsList = [
+        { initialText: '૨ લિટર', initialVal: 2000, staticIds: [], blanks: 2, targetVal: 1000, targetText: '૧ લિટર' }, 
+        { initialText: '૧ લિટર', initialVal: 1000, staticIds: [], blanks: 2, targetVal: 700, targetText: '૭૦૦ મિલી' }, 
+        { initialText: '૫ લિટર', initialVal: 5000, staticIds: ['water'], blanks: 2, targetVal: 3000, targetText: '૩ લિટર' }, 
+        { initialText: '૧ લિટર ૨૦૦ મિલી', initialVal: 1200, staticIds: [], blanks: 3, targetVal: 800, targetText: '૮૦૦ મિલી' }, 
+        { initialText: '૫૦૦ મિલી', initialVal: 500, staticIds: [], blanks: 2, targetVal: 400, targetText: '૪૦૦ મિલી' }, 
+        { initialText: '૩ લિટર', initialVal: 3000, staticIds: [], blanks: 3, targetVal: 2800, targetText: '૨ લિટર ૮૦૦ મિલી' }, 
+        { initialText: '૨૦૦ મિલી', initialVal: 200, staticIds: [], blanks: 2, targetVal: 180, targetText: '૧૮૦ મિલી' }, 
+        { initialText: '૬ લિટર', initialVal: 6000, staticIds: [], blanks: 3, targetVal: 800, targetText: '૮૦૦ મિલી' }, 
+        { initialText: '૧૦૦ મિલી', initialVal: 100, staticIds: [], blanks: 3, targetVal: 70, targetText: '૭૦ મિલી' }, 
+        { initialText: '૨ લિટર ૫૦૦ મિલી', initialVal: 2500, staticIds: [], blanks: 2, targetVal: 1000, targetText: '૧ લિટર' } 
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let isQuestionLocked = false; // જવાબ ચેક થયા પછી લોક કરવા
+
+    let draggedItem = null;
+    let cloneElement = null;
+    let currentDropZone = null;
+
+    function toGujaratiDigits(num) {
+        const gujDigits = ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯'];
+        return num.toString().split('').map(d => gujDigits[d] || d).join('');
+    }
+
+    function getItemById(id) {
+        return itemsData.find(item => item.id === id);
+    }
+
+    function initGame() {
+        renderTray();
+        loadQuestion();
+    }
+
+    function renderTray() {
+        const tray = document.getElementById('itemsTray');
+        tray.innerHTML = '';
+        itemsData.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'draggable-item';
+            div.dataset.id = item.id;
+            div.innerHTML = `
+                <div class="item-icon">${item.icon}</div>
+                <div class="item-label">${item.label}</div>
+                <div class="item-name">${item.name}</div>
+            `;
+            
+            div.addEventListener('pointerdown', handleDragStart);
+            tray.appendChild(div);
+        });
+    }
+
+    function loadQuestion() {
+        isQuestionLocked = false;
+        const q = questionsList[currentQuestionIndex];
+        document.getElementById('questionNumber').innerText = `પ્રશ્ન: ${toGujaratiDigits(currentQuestionIndex + 1)} / ૧૦`;
+        document.getElementById('feedbackBox').innerHTML = '';
+        document.getElementById('checkBtn').style.display = 'inline-block';
+        document.getElementById('nextBtn').style.display = 'none';
+        
+        const eqArea = document.getElementById('equationArea');
+        eqArea.innerHTML = '';
+
+        // કુલ માપ બોક્સ
+        eqArea.innerHTML += `
+            <div class="initial-box">${q.initialText}</div>
+            <span>-</span>
+        `;
+
+        // સ્ટેટિક બાદબાકી
+        q.staticIds.forEach((id, index) => {
+            const item = getItemById(id);
+            eqArea.innerHTML += `
+                <div class="static-item">
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-label">${item.label}</div>
+                </div>
+            `;
+            if (index < q.staticIds.length - 1 || q.blanks > 0) {
+                eqArea.innerHTML += `<span>-</span>`;
+            }
+        });
+
+        // ખાલી જગ્યાઓ (બાદબાકી માટે)
+        for (let i = 0; i < q.blanks; i++) {
+            const dropZone = document.createElement('div');
+            dropZone.className = 'drop-zone';
+            dropZone.innerHTML = 'શું બાદ<br>કરીશું?';
+            dropZone.dataset.val = '0';
+
+            dropZone.addEventListener('click', () => {
+                if (!isQuestionLocked && dropZone.dataset.val !== '0') {
+                    dropZone.innerHTML = 'શું બાદ<br>કરીશું?';
+                    dropZone.dataset.val = '0';
+                    dropZone.classList.remove('filled');
+                }
+            });
+
+            eqArea.appendChild(dropZone);
+
+            if (i < q.blanks - 1) {
+                const minus = document.createElement('span');
+                minus.innerHTML = '-';
+                eqArea.appendChild(minus);
+            }
+        }
+
+        // બરાબર અને જવાબ
+        eqArea.innerHTML += `
+            <span>=</span>
+            <div class="target-box">
+                ${q.targetText}
+            </div>
+        `;
+    }
+
+    // --- ડ્રેગ એન્ડ ડ્રોપ લોજીક ---
+
+    function handleDragStart(e) {
+        if (isQuestionLocked) return; // જો લોક હોય તો ડ્રેગ બંધ
+        if (e.button !== 0 && e.type !== 'touchstart') return; 
+        
+        draggedItem = getItemById(e.currentTarget.dataset.id);
+        
+        cloneElement = e.currentTarget.cloneNode(true);
+        cloneElement.style.position = 'absolute';
+        cloneElement.style.zIndex = '1000';
+        cloneElement.style.opacity = '0.9';
+        cloneElement.style.pointerEvents = 'none'; 
+        cloneElement.style.boxShadow = '0 15px 25px rgba(0,0,0,0.4)';
+        cloneElement.style.transform = 'scale(1.15)';
+        
+        document.body.appendChild(cloneElement);
+        
+        moveClone(e.pageX, e.pageY);
+
+        document.addEventListener('pointermove', handleDragMove);
+        document.addEventListener('pointerup', handleDragEnd);
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+    }
+
+    function moveClone(x, y) {
+        if (!cloneElement) return;
+        cloneElement.style.left = (x - cloneElement.offsetWidth / 2) + 'px';
+        cloneElement.style.top = (y - cloneElement.offsetHeight / 2) + 'px';
+    }
+
+    function handleDragMove(e) {
+        if (!cloneElement) return;
+        moveClone(e.pageX, e.pageY);
+
+        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+        const dropZone = elementBelow ? elementBelow.closest('.drop-zone') : null;
+
+        if (currentDropZone && currentDropZone !== dropZone) {
+            currentDropZone.classList.remove('highlight');
+        }
+        if (dropZone && !isQuestionLocked) {
+            dropZone.classList.add('highlight');
+            currentDropZone = dropZone;
+        } else {
+            currentDropZone = null;
+        }
+    }
+
+    function handleDragEnd(e) {
+        if (cloneElement) {
+            cloneElement.remove();
+            cloneElement = null;
+        }
+
+        if (currentDropZone && draggedItem && !isQuestionLocked) {
+            currentDropZone.innerHTML = `
+                <div class="item-icon">${draggedItem.icon}</div>
+                <div class="item-label">${draggedItem.label}</div>
+            `;
+            currentDropZone.dataset.val = draggedItem.val;
+            currentDropZone.classList.remove('highlight');
+            currentDropZone.classList.add('filled');
+        }
+
+        draggedItem = null;
+        currentDropZone = null;
+
+        document.removeEventListener('pointermove', handleDragMove);
+        document.removeEventListener('pointerup', handleDragEnd);
+        document.removeEventListener('touchmove', preventScroll);
+    }
+
+    function preventScroll(e) { e.preventDefault(); }
+
+    // --- ચેકિંગ લોજીક (કોઈ રિટ્રાય નહિ) ---
+
+    function checkAnswer() {
+        const q = questionsList[currentQuestionIndex];
+        let totalSubtracted = 0;
+
+        q.staticIds.forEach(id => {
+            totalSubtracted += getItemById(id).val;
+        });
+
+        const zones = document.querySelectorAll('.drop-zone');
+        let allFilled = true;
+        zones.forEach(zone => {
+            const val = parseInt(zone.dataset.val);
+            if (val === 0) allFilled = false;
+            totalSubtracted += val;
+        });
+
+        const feedback = document.getElementById('feedbackBox');
+
+        if (!allFilled) {
+            feedback.innerHTML = `<span class="feedback-wrong" style="color:#F57C00;">⚠️ પહેલા બધી ખાલી જગ્યાઓ ભરો.</span>`;
+            return; // જો ખાલી હોય તો જ ચેક નહિ થાય, પણ એકવાર ભરાઈ ગઈ એટલે લોક થઈ જશે.
+        }
+
+        // જો બધી ખાલી જગ્યાઓ ભરાઈ ગઈ છે, તો ગેમ લોક કરો (કોઈ ફેરફાર શક્ય નહિ)
+        isQuestionLocked = true;
+        document.getElementById('checkBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'inline-block';
+
+        // ગણતરી: કુલ - બાદ કરેલું = જવાબ
+        if ((q.initialVal - totalSubtracted) === q.targetVal) {
+            feedback.innerHTML = `<span class="feedback-correct">સાચો જવાબ! 😃 ઉત્તમ!</span>`;
+            score += 10;
+            document.getElementById('scoreBoard').innerText = `ગુણ: ${toGujaratiDigits(score)}`;
+        } else {
+            // સીધો ખોટો જવાબ અને આગળ વધવાનું બટન
+            feedback.innerHTML = `<span class="feedback-wrong">ખોટો જવાબ! 😢 માપમાં ભૂલ છે.</span>`;
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questionsList.length) {
+            loadQuestion();
+        } else {
+            showEndScreen();
+        }
+    }
+
+    function showEndScreen() {
+        document.getElementById('gameScreen').style.display = 'none';
+        document.getElementById('endScreen').style.display = 'flex';
+        
+        document.getElementById('finalScoreText').innerText = `તમારો કુલ ગુણ: ${toGujaratiDigits(score)} / ૧૦૦`;
+        
+        const congratsMsg = document.getElementById('congratsMsg');
+        if (score >= 50) {
+            congratsMsg.innerHTML = '🎉 ખૂબ ખૂબ અભિનંદન! <br> તમારું ગણિત ખૂબ પાકું છે! 🌟';
+        } else {
+            congratsMsg.innerHTML = 'વધુ મહાવરાની જરૂર છે, <br> ચિંતા ન કરો, ફરી પ્રયત્ન કરજો! 👍';
+        }
+    }
+
+    window.onload = initGame;
+</script>
+
+</body>
+</html>
