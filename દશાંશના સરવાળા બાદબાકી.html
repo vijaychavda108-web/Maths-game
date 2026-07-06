@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>દશાંશ અપૂર્ણાંક - બ્રિજ બિલ્ડર ગેમ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f0f9ff;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .creator-info {
+            font-size: 14px;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .container {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn {
+            background-color: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn:hover {
+            background-color: #0284c7;
+        }
+
+        .btn:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Bridge Animation Visuals */
+        .bridge-environment {
+            height: 160px;
+            background: linear-gradient(to bottom, #bae6fd, #e0f2fe);
+            border-radius: 12px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #bae6fd;
+        }
+
+        .cliff {
+            width: 80px;
+            height: 100px;
+            background-color: #854d0e;
+            position: absolute;
+            bottom: 0;
+            border-top: 8px solid #166534;
+        }
+
+        .cliff-left { left: 0; border-radius: 0 12px 0 0; }
+        .cliff-right { right: 0; border-radius: 12px 0 0 0; }
+
+        .gap-text {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 14px;
+            color: #1e3a8a;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .bridge-plank {
+            position: absolute;
+            bottom: 80px;
+            left: 80px;
+            right: 80px;
+            height: 15px;
+            background-color: #b45309;
+            border: 2px solid #78350f;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            transform: translateY(-50px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .bridge-plank.placed {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .bridge-plank.wrong {
+            transform: translateY(0) rotate(5deg);
+            opacity: 1;
+            background-color: #ef4444;
+            border-color: #991b1b;
+        }
+
+        /* Quiz Elements */
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 10%;
+            background-color: #10b981;
+            transition: width 0.3s ease;
+        }
+
+        .question-number {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .equation {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 15px 0;
+            letter-spacing: 1px;
+        }
+
+        .blank-space {
+            display: inline-block;
+            width: 90px;
+            border-bottom: 4px dashed #0ea5e9;
+            color: #0ea5e9;
+            text-align: center;
+            min-height: 42px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .option-btn {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .option-btn:hover {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.selected {
+            background-color: #e0f2fe;
+            border-color: #0ea5e9;
+            color: #0369a1;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        /* Results Screen */
+        .result-score {
+            font-size: 64px;
+            font-weight: block;
+            color: #10b981;
+            margin: 20px 0;
+        }
+
+        .remark {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #475569;
+        }
+
+        .review-list {
+            text-align: left;
+            margin: 25px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .review-item {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+        }
+        
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-correct { color: #15803d; font-weight: bold; }
+        .status-wrong { color: #b91c1c; font-weight: bold; }
+
+        footer {
+            margin-top: auto;
+            width: 100%;
+            padding: 15px;
+            text-align: center;
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 500;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .hide {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>દશાંશ અપૂર્ણાંક - બ્રિજ બિલ્ડર ગેમ 🌉</h1>
+        <div class="creator-info">
+            Created by: વિજયકુમાર ચાવડા &nbsp;|&nbsp; શાળા: દાદાના મુવાડા પ્રા. શાળા
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="card">
+            <h2 style="margin-bottom: 15px; color: #0369a1;">આવો રમત રમતા રમતા દશાંશ અપૂર્ણાંક શીખીએ!</h2>
+            <p style="font-size: 16px; color: #475569; margin-bottom: 25px; line-height: 1.6;">
+                આ રમતમાં તમારી સામે પુલ (Bridge) તૂટેલો હશે. સાચો લાકડાનો ટુકડો (દશાંશ સંખ્યા) પસંદ કરી સમીકરણ પૂર્ણ કરો અને બ્રિજ બનાવો. કુલ ૧૦ પ્રશ્નો છે.
+            </p>
+            <button class="btn" onclick="startGame()">રમત શરૂ કરો 🚀</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="card hide">
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            
+            <div id="question-number" class="question-number">પ્રશ્ન: ૧ / ૧૦</div>
+
+            <!-- Bridge Animation Area -->
+            <div class="bridge-environment">
+                <div class="cliff cliff-left"></div>
+                <div id="visual-plank" class="bridge-plank"></div>
+                <div class="cliff cliff-right"></div>
+                <div class="gap-text">ખીણ (તૂટેલો પુલ)</div>
+            </div>
+
+            <!-- Equation Display -->
+            <div id="equation-container" class="equation">
+                <span id="part1">2.5</span> 
+                <span id="operator">+</span> 
+                <span id="part2" class="blank-space">?</span> 
+                <span>=</span> 
+                <span id="part3">3.7</span>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-grid" class="options-grid">
+                <!-- Dynamically generated buttons -->
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="navigation">
+                <div style="font-size: 14px; color: #64748b; font-style: italic;">* સાચો વિકલ્પ પસંદ કરો</div>
+                <button id="next-btn" class="btn" onclick="nextQuestion()" disabled>આગળ વધો ➡️</button>
+                <button id="submit-btn" class="btn hide" onclick="showResults()">સબમિટ કરો 🏁</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="card hide">
+            <h2 style="color: #0f172a;">તમારું પરિણામ 🎉</h2>
+            <div id="result-score" class="result-score">0 / 10</div>
+            <div id="remark" class="remark">ખૂબ સરસ પ્રયત્ન!</div>
+
+            <h3 style="text-align: left; margin-top: 15px; color: #334155;">પ્રશ્નોની સમીક્ષા:</h3>
+            <div id="review-list" class="review-list">
+                <!-- Review items injected here -->
+            </div>
+
+            <button class="btn" onclick="restartGame()" style="margin-top: 15px; background-color: #10b981; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);">ફરીથી રમો 🔄</button>
+        </div>
+    </div>
+
+    <footer>
+        Created by: વિજયકુમાર ચાવડા &nbsp;|&nbsp; શાળા: દાદાના મુવાડા પ્રા. શાળા
+    </footer>
+
+    <script>
+        // 10 Curated Decimal Fraction Questions
+        const questions = [
+            { type: 'add', p1: '૨.૫', op: '+', p2: '?', p3: '૩.૭', options: ['૧.૨', '૧.૫', '૨.૨', '૦.૨'], answer: '૧.૨', rawP1: 2.5, rawAns: 1.2 },
+            { type: 'sub', p1: '૫.૮', op: '-', p2: '?', p3: '૩.૫', options: ['૨.૩', '૨.૫', '૩.૩', '૧.૩'], answer: '૨.૩', rawP1: 5.8, rawAns: 2.3 },
+            { type: 'add', p1: '૪.૧૫', op: '+', p2: '?', p3: '૫.૪૫', options: ['૧.૩૦', '૧.૧૫', '૨.૩૦', '૦.૩૦'], answer: '૧.૩૦', rawP1: 4.15, rawAns: 1.3 },
+            { type: 'sub', p1: '૭.૯', op: '-', p2: '?', p3: '૩.૪', options: ['૪.૫', '૪.૦', '૩.૫', '૫.૫'], answer: '૪.૫', rawP1: 7.9, rawAns: 4.5 },
+            { type: 'add', p1: '૦.૬', op: '+', p2: '?', p3: '૧.૪', options: ['૦.૮', '૦.૪', '૧.૨', '૦.૬'], answer: '૦.૮', rawP1: 0.6, rawAns: 0.8 },
+            { type: 'sub', p1: '૯.૫', op: '-', p2: '?', p3: '૫.૮', options: ['૩.૭', '૪.૭', '૩.૫', '૨.??'], answer: '૩.૭', optionsText: ['૩.૭', '૪.૭', '૩.૫', '૨.૭'], answerIdx: 0 }, // fallback standard string match
+            { type: 'add', p1: '૩.૨૫', op: '+', p2: '?', p3: '૫.૭૫', options: ['૨.૫૦', '૨.૨૫', '૧.૫૦', '૩.૫૦'], answer: '૨.૫૦' },
+            { type: 'sub', p1: '૬.૦', op: '-', p2: '?', p3: '૪.૫', options: ['૧.૫', '૨.૫', '૦.૫', '૧.૦'], answer: '૧.૫' },
+            { type: 'add', p1: '૧.૮', op: '+', p2: '?', p3: '૪.૫', options: ['૨.૭', '૩.૭', '૧.૭', '૨.૫'], answer: '૨.运行' }, // fix display typo
+            { type: 'sub', p1: '૮.૪૫', op: '-', p2: '?', p3: '૫.૨૫', options: ['૩.૨૦', '૩.૪૫', '૨.૨૦', '૪.૨૦'], answer: '૩.૨૦' }
+        ];
+
+        // Clean up text fixes for Gujarati options safely
+        questions[5].options = ['૩.૭', '૪.૭', '૩.૫', '૨.૭'];
+        questions[8].options = ['૨.૭', '૩.૭', '૧.૭', '૨.૫'];
+        questions[8].answer = '૨.૭';
+
+        let currentQuestionIdx = 0;
+        let userAnswers = [];
+        let score = 0;
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hide');
+            document.getElementById('quiz-screen').classList.remove('hide');
+            currentQuestionIdx = 0;
+            userAnswers = [];
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIdx];
+            
+            // Update Progress Bar & Question Number
+            const progressPercent = ((currentQuestionIdx + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('question-number').innerText = `પ્રશ્ન: ${engToGujNum(currentQuestionIdx + 1)} / ૧૦`;
+
+            // Setup Equation Visual text
+            document.getElementById('part1').innerText = q.p1;
+            document.getElementById('operator').innerText = q.op;
+            
+            const blankSpace = document.getElementById('part2');
+            blankSpace.innerText = '?';
+            blankSpace.className = 'blank-space';
+
+            document.getElementById('part3').innerText = q.p3;
+
+            // Reset visual bridge plank
+            const plank = document.getElementById('visual-plank');
+            plank.className = 'bridge-plank';
+            plank.innerText = '';
+
+            // Generate Option Buttons
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(btn, opt);
+                optionsGrid.appendChild(btn);
+            });
+
+            // Adjust buttons visibility
+            if (currentQuestionIdx === questions.length - 1) {
+                document.getElementById('next-btn').classList.add('hide');
+                document.getElementById('submit-btn').classList.remove('hide');
+                document.getElementById('submit-btn').disabled = true;
+            } else {
+                document.getElementById('next-btn').classList.remove('hide');
+                document.getElementById('submit-btn').classList.add('hide');
+                document.getElementById('next-btn').disabled = true;
+            }
+        }
+
+        function selectOption(selectedBtn, selectedValue) {
+            // Remove previous selections visually
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+            
+            // Highlight current selection
+            selectedBtn.classList.add('selected');
+
+            // Update Equation Blank Space
+            const blankSpace = document.getElementById('part2');
+            blankSpace.innerText = selectedValue;
+            blankSpace.classList.remove('blank-space');
+
+            // Trigger Bridge Animation
+            const plank = document.getElementById('visual-plank');
+            plank.innerText = selectedValue;
+            
+            const q = questions[currentQuestionIdx];
+            userAnswers[currentQuestionIdx] = selectedValue;
+
+            if (selectedValue === q.answer) {
+                plank.className = 'bridge-plank placed';
+            } else {
+                plank.className = 'bridge-plank wrong';
+            }
+
+            // Enable action button
+            if (currentQuestionIdx === questions.length - 1) {
+                document.getElementById('submit-btn').disabled = false;
+            } else {
+                document.getElementById('next-btn').disabled = false;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIdx < questions.length - 1) {
+                currentQuestionIdx++;
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hide');
+            document.getElementById('results-screen').classList.remove('hide');
+
+            // Calculate Score
+            score = 0;
+            questions.forEach((q, idx) => {
+                if (userAnswers[idx] === q.answer) {
+                    score++;
+                }
+            });
+
+            // Display Score
+            document.getElementById('result-score').innerText = `${engToGujNum(score)} / ૧૦`;
+
+            // Set custom remark in Gujarati
+            const remarkText = document.getElementById('remark');
+            if (score === 10) {
+                remarkText.innerText = 'અદ્ભુત! તમે તો ડિજિટલ મેથ્સ માસ્ટર બની ગયા! 🏆🌟';
+                remarkText.style.color = '#10b981';
+            } else if (score >= 7) {
+                remarkText.innerText = 'ખૂબ જ સરસ દેખાવ! તમારો આઇડિયા એકદમ સ્પષ્ટ છે. 👍🎖️';
+                remarkText.style.color = '#0284c7';
+            } else if (score >= 5) {
+                remarkText.innerText = 'સરસ પ્રયત્ન! થોડી વધુ પ્રેક્ટિસ કરવાથી હજી સારું પરિણામ મળશે. 📚';
+                remarkText.style.color = '#b45309';
+            } else {
+                remarkText.innerText = 'કોઈ વાંધો નહીં, ફરી પ્રયત્ન કરો અને નવું શીખો! 📖✨';
+                remarkText.style.color = '#ef4444';
+            }
+
+            // Generate Review List
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const item = document.createElement('div');
+                item.className = 'review-item';
+                
+                const isCorrect = userAnswers[idx] === q.answer;
+                const eqString = `${q.p1} ${q.op} ${userAnswers[idx] || '?'} = ${q.p3}`;
+                
+                item.innerHTML = `
+                    <div>
+                        <strong>પ્રશ્ન ${engToGujNum(idx + 1)}:</strong> ${eqString}
+                    </div>
+                    <div class="${isCorrect ? 'status-correct' : 'status-wrong'}">
+                        ${isCorrect ? 'સાચું  ✔' : `ખોટું ✖ (સાચો જવાબ: ${q.answer})`}
+                    </div>
+                `;
+                reviewList.appendChild(item);
+            });
+        }
+
+        function restartGame() {
+            document.getElementById('results-screen').classList.add('hide');
+            startGame();
+        }
+
+        // Utility function to convert English integers into Gujarati Digits
+        function engToGujNum(num) {
+            const gujDigits = ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯'];
+            return num.toString().split('').map(digit => {
+                return !isNaN(parseInt(digit)) ? gujDigits[parseInt(digit)] : digit;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
