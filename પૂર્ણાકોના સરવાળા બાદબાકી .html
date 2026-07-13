@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>પૂર્ણાંક સંખ્યાઓની સફર - ગણિત ગેમ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .main-container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            padding: 15px;
+            text-align: center;
+        }
+        header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .credits {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #e0e6ed;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .game-layout {
+            display: flex;
+            justify-content: space-between;
+            background: #fdfdfd;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            gap: 15px;
+        }
+        /* વિઝ્યુઅલ એરિયા: આકાશ અને દરિયો */
+        .visual-area {
+            width: 45%;
+            height: 440px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, 
+                #bae6fd 0%, #e0f2fe 48%, /* આકાશ */
+                #0284c7 50%, #075985 75%, #0c4a6e 100% /* દરિયો */
+            );
+            border: 1px solid #0284c7;
+        }
+        /* ઊભી સંખ્યા રેખા */
+        .number-line {
+            position: absolute;
+            left: 20px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background-color: #334155;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .num-label {
+            position: absolute;
+            left: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #1e293b;
+            transform: translateY(-50%);
+        }
+        /* દરિયાની સપાટી (0 લેવલ લાઇન) */
+        .sea-level {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.4);
+            border-dash: 4px;
+        }
+        /* વાહન (બલૂન/હોડી/સબમરીન) */
+        #vehicle {
+            position: absolute;
+            left: 55%;
+            transform: translate(-50%, 50%);
+            font-size: 40px;
+            transition: bottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            bottom: 220px; /* શૂન્ય પર ડિફોલ્ટ */
+            z-index: 10;
+        }
+        /* પ્રશ્ન અને જવાબનો એરિયા */
+        .quiz-area {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .score-box { color: #16a34a; }
+        .question-box {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #1e293b;
+            background: #f1f5f9;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+        .option-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .option-btn:hover { background-color: #2563eb; transform: translateY(-2px); }
+        .option-btn:active { transform: translateY(0); }
+        
+        #feedback {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            height: 25px;
+        }
+        .correct { color: #16a34a; }
+        .wrong { color: #dc2626; }
+        
+        @media (max-width: 600px) {
+            .game-layout { flex-direction: column; }
+            .visual-area, .quiz-area { width: 100%; }
+            .visual-area { height: 350px; }
+            #vehicle { bottom: 175px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <header>
+        <h1>🎈 પૂર્ણાંક સંખ્યાઓની સફર ⚓</h1>
+        <div class="credits">
+            Created by: <b>વિજયકુમાર ચાવડા</b> | શાળા: <b>દાદાના મુવાડા પ્રા. શાળા</b>
+        </div>
+    </header>
+
+    <div class="game-layout">
+        <div class="visual-area" id="visualArea">
+            <div class="sea-level"></div>
+            <div class="number-line" id="numberLine"></div>
+            <div id="vehicle">⛵</div>
+        </div>
+
+        <div class="quiz-area">
+            <div class="stats">
+                <div class="score-box">સ્કોર: <span id="score">0</span></div>
+                <div>પ્રશ્ન નં: <span id="qNo">1</span> / 15</div>
+            </div>
+            
+            <div class="question-box" id="question">0 + 0</div>
+            
+            <div class="options-grid" id="optionsGrid">
+                <button class="option-btn" onclick="checkAnswer(this)">0</button>
+                <button class="option-btn" onclick="checkAnswer(this)">0</button>
+                <button class="option-btn" onclick="checkAnswer(this)">0</button>
+                <button class="option-btn" onclick="checkAnswer(this)">0</button>
+            </div>
+            
+            <div id="feedback"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let score = 0;
+    let questionCount = 1;
+    let correctAnswer = 0;
+    const maxRange = 10; // સંખ્યા રેખાની મર્યાદા +10 થી -10 સુધી
+    const totalQuestions = 15; // કુલ પ્રશ્નોની સંખ્યા
+
+    // સંખ્યા રેખા પર લેબલ્સ સેટ કરવા (HTML લોડ થતા જ રન થશે)
+    function createNumberLine() {
+        const numLine = document.getElementById('numberLine');
+        numLine.innerHTML = ''; // જો ફરીથી રમે તો જૂની લાઇન સાફ કરવા
+        const visualAreaHeight = document.getElementById('visualArea').clientHeight;
+        
+        for (let i = maxRange; i >= -maxRange; i--) {
+            const label = document.createElement('div');
+            label.className = 'num-label';
+            label.innerText = i > 0 ? `+${i}` : i;
+            
+            // યોગ્ય ઊંચાઈ પર ગોઠવણી (ટકાવારીમાં)
+            const percent = ((maxRange - i) / (maxRange * 2)) * 92 + 4;
+            label.style.top = `${percent}%`;
+            numLine.appendChild(label);
+        }
+    }
+
+    // નવો પ્રશ્ન બનાવવો
+    function generateQuestion() {
+        document.getElementById('feedback').innerText = "";
+        
+        // બે રેન્ડમ પૂર્ણાંક સંખ્યાઓ લેવી (-8 થી +8 વચ્ચે જેથી જવાબ -10 થી +10 માં રહે)
+        let num1 = Math.floor(Math.random() * 17) - 8;
+        let num2 = Math.floor(Math.random() * 17) - 8;
+        
+        // સરવાળો કે બાદબાકી નક્કી કરવું (0 = સરવાળો, 1 = બાદબાકી)
+        let isAddition = Math.random() > 0.5;
+        
+        let questionText = "";
+        if (isAddition) {
+            correctAnswer = num1 + num2;
+            let num2Display = num2 < 0 ? `(${num2})` : `${num2}`;
+            questionText = `${num1} + ${num2Display}`;
+        } else {
+            correctAnswer = num1 - num2;
+            let num2Display = num2 < 0 ? `(${num2})` : `${num2}`;
+            questionText = `${num1} - ${num2Display}`;
+        }
+
+        // જો જવાબ રેન્જ બહાર જાય તો ફરી પ્રશ્ન બનાવો
+        if (correctAnswer > maxRange || correctAnswer < -maxRange) {
+            generateQuestion();
+            return;
+        }
+
+        document.getElementById('question').innerHTML = questionText;
+        generateOptions();
+    }
+
+    // જવાબોના ચાર વિકલ્પો બનાવવા
+    function generateOptions() {
+        let options = [correctAnswer];
+        
+        while (options.length < 4) {
+            let wrongAns = correctAnswer + (Math.floor(Math.random() * 5) - 2);
+            // જો ખોટો જવાબ સાચા જવાબ જેવો જ હોય અથવા રેન્જ બહાર હોય તો બદલવો
+            if (!options.includes(wrongAns) && wrongAns >= -maxRange && wrongAns <= maxRange) {
+                options.push(wrongAns);
+            } else {
+                let randomWrong = Math.floor(Math.random() * (maxRange * 2 + 1)) - maxRange;
+                if (!options.includes(randomWrong)) options.push(randomWrong);
+            }
+        }
+
+        // વિકલ્પોને આડાઅવળા (Shuffle) કરવા
+        options.sort(() => Math.random() - 0.5);
+
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach((btn, index) => {
+            btn.innerText = options[index];
+            btn.disabled = false;
+            btn.style.backgroundColor = "#3b82f6"; // રીસેટ કલર
+        });
+    }
+
+    // જવાબ ચેક કરવો
+    function checkAnswer(selectedButton) {
+        const userAnswer = parseInt(selectedButton.innerText);
+        const buttons = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedback');
+
+        // બધા બટન લોક કરી દેવા
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (userAnswer === correctAnswer) {
+            score += 10;
+            document.getElementById('score').innerText = score;
+            feedback.innerText = "સાચો જવાબ! 🎉";
+            feedback.className = "correct";
+            selectedButton.style.backgroundColor = "#16a34a"; // લીલો રંગ
+            
+            // વાહનની પોઝિશન અને ઈમોજી બદલવું
+            moveVehicle(correctAnswer);
+        } else {
+            feedback.innerText = `ખોટો જવાબ! સાચો જવાબ: ${correctAnswer} છે. ❌`;
+            feedback.className = "wrong";
+            selectedButton.style.backgroundColor = "#dc2626"; // લાલ રંગ
+            
+            // સાચા બટન પર ગ્રીન હાઈલાઈટ કરવું
+            buttons.forEach(btn => {
+                if (parseInt(btn.innerText) === correctAnswer) {
+                    btn.style.backgroundColor = "#16a34a";
+                }
+            });
+        }
+
+        // 2 સેકન્ડ પછી આગામી પ્રશ્ન અથવા રિઝલ્ટ લાવો
+        setTimeout(() => {
+            if (questionCount >= totalQuestions) {
+                endGame(); // 15 પ્રશ્નો પૂરા થાય ત્યારે ગેમ ખતમ કરો
+            } else {
+                questionCount++;
+                document.getElementById('qNo').innerText = questionCount;
+                generateQuestion();
+            }
+        }, 2200);
+    }
+
+    // રમત પૂરી થવા પરનું ફંક્શન
+    function endGame() {
+        const questionBox = document.getElementById('question');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const feedback = document.getElementById('feedback');
+
+        questionBox.innerHTML = `રમત પૂર્ણ થઈ!<br><br>તમારો અંતિમ સ્કોર:<br> <span style="color:#16a34a; font-size:40px;">${score} / 150</span>`;
+        
+        // "ફરીથી રમો" બટન ઉમેરવું
+        optionsGrid.innerHTML = `<button class="option-btn" style="grid-column: span 2; background-color: #f59e0b; color: white;" onclick="restartGame()">ફરીથી રમો 🔄</button>`;
+        
+        feedback.innerText = "ખૂબ સરસ પ્રયાસ! 🌟";
+        feedback.className = "correct";
+    }
+
+    // ગેમ ફરીથી શરૂ કરવાનું ફંક્શન
+    function restartGame() {
+        score = 0;
+        questionCount = 1;
+        document.getElementById('score').innerText = score;
+        document.getElementById('qNo').innerText = questionCount;
+        
+        // વિકલ્પોના બટન પાછા લાવવા
+        const optionsGrid = document.getElementById('optionsGrid');
+        optionsGrid.innerHTML = `
+            <button class="option-btn" onclick="checkAnswer(this)"></button>
+            <button class="option-btn" onclick="checkAnswer(this)"></button>
+            <button class="option-btn" onclick="checkAnswer(this)"></button>
+            <button class="option-btn" onclick="checkAnswer(this)"></button>
+        `;
+        
+        moveVehicle(0); // વાહનને શૂન્ય પર લાવો
+        generateQuestion();
+    }
+
+    // વાહનને નંબર લાઇન મુજબ ઉપર-નીચે ખસેડવું
+    function moveVehicle(value) {
+        const vehicle = document.getElementById('vehicle');
+        const visualArea = document.getElementById('visualArea');
+        const height = visualArea.clientHeight;
+
+        // મધ્યબિંદુ (0) થી ગણતરી કરવી
+        const midPoint = height / 2;
+        // દરેક સ્ટેપની પિક્સેલ સાઈઝ (રેન્જ 10 છે એટલે ઉપર 10 અને નીચે 10)
+        const stepPixels = (height / 2) / (maxRange + 1); 
+        
+        const newBottom = midPoint + (value * stepPixels) - 20; // 20 એડજસ્ટમેન્ટ માટે
+        vehicle.style.bottom = `${newBottom}px`;
+
+        // જવાબના આધારે વાહન બદલવું
+        if (value > 0) {
+            vehicle.innerText = "🎈"; // ધન સંખ્યા માટે હોટ એર બલૂન
+        } else if (value < 0) {
+            vehicle.innerText = "⚓"; // ઋણ સંખ્યા માટે સબમરીન/એન્કર
+        } else {
+            vehicle.innerText = "⛵"; // શૂન્ય માટે હોડી
+        }
+    }
+
+    // રમત શરૂ કરવી
+    window.onload = function() {
+        createNumberLine();
+        generateQuestion();
+    };
+</script>
+
+</body>
+</html>
