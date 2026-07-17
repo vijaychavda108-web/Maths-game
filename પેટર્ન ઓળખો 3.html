@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>પેટર્ન આગળ વધારો - Educational Game</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #1a4f76;
+            text-align: center;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 3px dashed #66a6ff;
+        }
+
+        #game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .instruction {
+            font-size: 18px;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .q-counter {
+            font-size: 20px;
+            color: #d32f2f;
+            margin-bottom: 20px;
+            font-weight: bold;
+            background: #ffebee;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .sequence-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0;
+            min-height: 90px;
+            background: #f4f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #d0e4ff;
+        }
+
+        .seq-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 75px;
+            height: 75px;
+        }
+
+        .drop-zone {
+            width: 75px;
+            height: 75px;
+            border: 3px dashed #999;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #e9e9e9;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .drop-zone.hover {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            transform: scale(1.05);
+        }
+
+        .drop-zone.filled {
+            border: 3px solid #4CAF50;
+            background: #e8f5e9;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .options-title {
+            font-weight: bold;
+            color: #555;
+            margin-top: 20px;
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 15px;
+            padding: 20px;
+            background: #fff8e1;
+            border-radius: 15px;
+            border: 2px dashed #ffc107;
+        }
+
+        .option {
+            width: 75px;
+            height: 75px;
+            cursor: grab;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .option:active {
+            cursor: grabbing;
+            transform: scale(0.9);
+        }
+
+        .option:hover {
+            transform: scale(1.1);
+            border-color: #ff9800;
+        }
+
+        .feedback {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 25px;
+            min-height: 40px;
+        }
+
+        .correct {
+            color: #4CAF50;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .wrong {
+            color: #f44336;
+            animation: shake 0.5s;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 18px;
+            color: #1a4f76;
+            background: rgba(255,255,255,0.85);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid white;
+        }
+
+        .btn-restart {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-restart:hover { background: #45a049; transform: scale(1.05); }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-15px); }
+            40%, 80% { transform: translateX(15px); }
+        }
+
+        /* Mobile Responsive */
+        @media(max-width: 600px) {
+            .option, .seq-item, .drop-zone { width: 60px; height: 60px; }
+            .sequence-container, .options-container { gap: 10px; padding: 15px; }
+            svg { width: 50px; height: 50px; }
+            h1 { font-size: 24px; padding: 10px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✨ પેટર્ન આગળ વધારો ✨</h1>
+
+    <div id="game-container">
+        <div class="q-counter" id="q-counter">પ્રશ્ન ૧ / ૧૧</div>
+        <div class="instruction">યોગ્ય પેટર્ન પસંદ કરીને ખાલી જગ્યામાં મૂકો (ડ્રેગ-ડ્રોપ કરો અથવા ક્લિક કરો)</div>
+        
+        <div class="sequence-container" id="sequence-container">
+            <!-- Sequence items will be injected here via JS -->
+        </div>
+
+        <div class="options-title">તમારો જવાબ પસંદ કરો:</div>
+        <div class="options-container" id="options-container">
+            <!-- Draggable options will be injected here via JS -->
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div class="footer">
+        Created by: વિજયકુમાર ચાવડા <br>
+        શાળા: દાદાના મુવાડા પ્રા શાળા
+    </div>
+
+    <script>
+        // --- SVG Generators based on the attached image ---
+        const svgs = {
+            arrowCircle: (deg) => `<svg viewBox="0 0 100 100" width="60" height="60" style="transform: rotate(${deg}deg); overflow: visible;"><circle cx="50" cy="50" r="25" fill="none" stroke="#0047AB" stroke-width="4"/><line x1="50" y1="-10" x2="50" y2="25" stroke="#0047AB" stroke-width="4"/><polygon points="40,-5 60,-5 50,-20" fill="#0047AB"/><line x1="50" y1="110" x2="50" y2="75" stroke="#0047AB" stroke-width="4"/><polygon points="40,105 60,105 50,120" fill="#0047AB"/></svg>`,
+            
+            triangleNodes: (state) => `<svg viewBox="0 0 100 100" width="60" height="60"><polygon points="50,20 15,80 85,80" fill="none" stroke="#0047AB" stroke-width="4"/><circle cx="15" cy="80" r="10" fill="${state===0?'#999':'#fff'}" stroke="#0047AB" stroke-width="4"/><circle cx="50" cy="20" r="10" fill="${state===1?'#999':'#fff'}" stroke="#0047AB" stroke-width="4"/><circle cx="85" cy="80" r="10" fill="${state===2?'#999':'#fff'}" stroke="#0047AB" stroke-width="4"/></svg>`,
+            
+            pie8: (rot) => `<svg viewBox="0 0 100 100" width="60" height="60" style="transform: rotate(${rot*45}deg)"><circle cx="50" cy="50" r="45" fill="none" stroke="#0047AB" stroke-width="4"/><path d="M 50 50 L 50 5 A 45 45 0 0 1 81.8 18.2 Z" fill="#999" stroke="#0047AB" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="95" stroke="#0047AB" stroke-width="2"/><line x1="5" y1="50" x2="95" y2="50" stroke="#0047AB" stroke-width="2"/><line x1="18.2" y1="18.2" x2="81.8" y2="81.8" stroke="#0047AB" stroke-width="2"/><line x1="18.2" y1="81.8" x2="81.8" y2="18.2" stroke="#0047AB" stroke-width="2"/></svg>`,
+            
+            shapeDots: (type) => {
+                if(type===0) return `<svg viewBox="0 0 100 100" width="60" height="60"><polygon points="50,15 10,85 90,85" fill="#aaa" stroke="#0047AB" stroke-width="4"/><circle cx="50" cy="65" r="8" fill="#000"/></svg>`;
+                if(type===1) return `<svg viewBox="0 0 100 100" width="60" height="60"><polygon points="10,15 90,15 50,85" fill="#aaa" stroke="#0047AB" stroke-width="4"/><circle cx="50" cy="35" r="8" fill="#000"/></svg>`;
+                return `<svg viewBox="0 0 100 100" width="60" height="60"><polygon points="25,20 95,20 75,80 5,80" fill="#aaa" stroke="#0047AB" stroke-width="4"/><circle cx="35" cy="50" r="8" fill="#000"/><circle cx="65" cy="50" r="8" fill="#000"/></svg>`;
+            },
+            
+            chevron: (deg) => `<svg viewBox="0 0 100 100" width="60" height="60" style="transform: rotate(${deg}deg)"><polygon points="20,10 80,50 20,90 40,50" fill="none" stroke="#0047AB" stroke-width="5"/></svg>`,
+            
+            charShape: (char) => `<div style="font-size: 50px; line-height: 60px; color: #0047AB; font-family: sans-serif;">${char}</div>`,
+            
+            semiCircle: (type) => {
+                if(type===0) return `<svg viewBox="0 0 100 100" width="60" height="60"><path d="M50,10 A40,40 0 0,0 50,90 Z" fill="#999" stroke="#0047AB" stroke-width="4"/><circle cx="30" cy="50" r="6" fill="#000"/><path d="M50,10 A40,40 0 0,1 50,90 Z" fill="#999" stroke="#0047AB" stroke-width="4"/><circle cx="70" cy="50" r="6" fill="#000"/></svg>`;
+                if(type===1) return `<svg viewBox="0 0 100 100" width="60" height="60"><path d="M10,50 A40,40 0 0,1 90,50 Z" fill="#999" stroke="#0047AB" stroke-width="4"/><circle cx="50" cy="30" r="6" fill="#000"/></svg>`;
+                return `<svg viewBox="0 0 100 100" width="60" height="60"><path d="M10,50 A40,40 0 0,0 90,50 Z" fill="#999" stroke="#0047AB" stroke-width="4"/><circle cx="50" cy="70" r="6" fill="#000"/></svg>`;
+            },
+            
+            mathShape: (type) => {
+                if(type===0) return `<svg viewBox="0 0 100 100" width="60" height="60"><circle cx="50" cy="50" r="40" fill="none" stroke="#0047AB" stroke-width="5"/></svg>`;
+                if(type===1) return `<svg viewBox="0 0 100 100" width="60" height="60"><polygon points="35,15 65,15 65,35 85,35 85,65 65,65 65,85 35,85 35,65 15,65 15,35 35,35" fill="none" stroke="#0047AB" stroke-width="5"/></svg>`;
+                if(type===2) return `<svg viewBox="0 0 100 100" width="60" height="60"><polygon points="15,20 35,20 50,65 65,20 85,20 50,90" fill="none" stroke="#0047AB" stroke-width="5"/></svg>`;
+                return `<svg viewBox="0 0 100 100" width="60" height="60"><path d="M20,90 L20,45 A30,30 0 0,1 80,45 L80,90 L55,90 L55,45 A10,10 0 0,0 45,45 L45,90 Z" fill="none" stroke="#0047AB" stroke-width="5"/></svg>`;
+            },
+            
+            pie4: (rot) => `<svg viewBox="0 0 100 100" width="60" height="60" style="transform: rotate(${rot*90}deg)"><circle cx="50" cy="50" r="45" fill="none" stroke="#0047AB" stroke-width="4"/><path d="M 50 50 L 50 5 A 45 45 0 0 1 95 50 Z" fill="#999" stroke="#0047AB" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="95" stroke="#0047AB" stroke-width="3"/><line x1="5" y1="50" x2="95" y2="50" stroke="#0047AB" stroke-width="3"/></svg>`,
+            
+            diamondDot: (rot) => `<svg viewBox="0 0 100 100" width="60" height="60" style="transform: rotate(${rot*90}deg)"><polygon points="50,5 95,50 50,95 5,50" fill="none" stroke="#0047AB" stroke-width="4"/><line x1="5" y1="50" x2="95" y2="50" stroke="#0047AB" stroke-width="3"/><line x1="50" y1="5" x2="50" y2="95" stroke="#0047AB" stroke-width="3"/><circle cx="25" cy="50" r="8" fill="#000"/></svg>`,
+            
+            dotRect: (count) => {
+                let dots = '';
+                for(let i=0; i<count; i++) {
+                    let cx = 20 + (60 / (count-1)) * i;
+                    dots += `<circle cx="${cx}" cy="50" r="6" fill="#000"/>`;
+                }
+                return `<svg viewBox="0 0 100 100" width="80" height="50"><rect x="5" y="25" width="90" height="50" fill="none" stroke="#0047AB" stroke-width="4"/>${dots}</svg>`; 
+            }
+        };
+
+        // --- Data for all 11 Questions exactly matching the book image ---
+        const questions = [
+            { seq: [svgs.arrowCircle(0), svgs.arrowCircle(45), svgs.arrowCircle(90), svgs.arrowCircle(135)], ans: svgs.arrowCircle(0), wrong: [svgs.arrowCircle(45), svgs.arrowCircle(90)] },
+            { seq: [svgs.triangleNodes(0), svgs.triangleNodes(1), svgs.triangleNodes(2)], ans: svgs.triangleNodes(0), wrong: [svgs.triangleNodes(1), svgs.triangleNodes(2)] },
+            { seq: [svgs.pie8(1), svgs.pie8(2), svgs.pie8(3)], ans: svgs.pie8(4), wrong: [svgs.pie8(5), svgs.pie8(0)] },
+            { seq: [svgs.shapeDots(0), svgs.shapeDots(1), svgs.shapeDots(2), svgs.shapeDots(0), svgs.shapeDots(1)], ans: svgs.shapeDots(2), wrong: [svgs.shapeDots(0), svgs.shapeDots(1)] },
+            { seq: [svgs.chevron(0), svgs.chevron(90), svgs.chevron(180), svgs.chevron(270)], ans: svgs.chevron(0), wrong: [svgs.chevron(90), svgs.chevron(180)] },
+            { seq: [svgs.charShape('◇'), svgs.charShape('✡'), svgs.charShape('♡'), svgs.charShape('❀'), svgs.charShape('◇'), svgs.charShape('✡')], ans: svgs.charShape('♡'), wrong: [svgs.charShape('❀'), svgs.charShape('◇')] },
+            { seq: [svgs.semiCircle(0), svgs.semiCircle(1), svgs.semiCircle(2), svgs.semiCircle(0), svgs.semiCircle(1)], ans: svgs.semiCircle(2), wrong: [svgs.semiCircle(0), svgs.semiCircle(1)] },
+            { seq: [svgs.mathShape(0), svgs.mathShape(1), svgs.mathShape(2), svgs.mathShape(3), svgs.mathShape(0), svgs.mathShape(1)], ans: svgs.mathShape(2), wrong: [svgs.mathShape(3), svgs.mathShape(0)] },
+            { seq: [svgs.pie4(0), svgs.pie4(1), svgs.pie4(2)], ans: svgs.pie4(3), wrong: [svgs.pie4(0), svgs.pie4(1)] },
+            { seq: [svgs.diamondDot(0), svgs.diamondDot(1), svgs.diamondDot(2)], ans: svgs.diamondDot(3), wrong: [svgs.diamondDot(0), svgs.diamondDot(1)] },
+            { seq: [svgs.dotRect(2), svgs.dotRect(4), svgs.dotRect(6)], ans: svgs.dotRect(8), wrong: [svgs.dotRect(3), svgs.dotRect(5)] }
+        ];
+
+        let currentQIndex = 0;
+        let isProcessing = false;
+
+        const seqContainer = document.getElementById('sequence-container');
+        const optsContainer = document.getElementById('options-container');
+        const feedback = document.getElementById('feedback');
+        const qCounter = document.getElementById('q-counter');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            isProcessing = false;
+            feedback.className = 'feedback';
+            feedback.innerHTML = '';
+            
+            const q = questions[currentQIndex];
+            qCounter.innerHTML = `પ્રશ્ન ${currentQIndex + 1} / ${questions.length}`;
+
+            // Build Sequence
+            seqContainer.innerHTML = '';
+            q.seq.forEach(item => {
+                seqContainer.innerHTML += `<div class="seq-item">${item}</div>`;
+            });
+            seqContainer.innerHTML += `<div class="drop-zone" id="drop-zone"></div>`;
+
+            // Build Options Array with correct flag
+            optsContainer.innerHTML = '';
+            let optionsData = [
+                { html: q.ans, isCorrect: true },
+                ...q.wrong.map(w => ({ html: w, isCorrect: false }))
+            ];
+            optionsData = shuffleArray(optionsData);
+            
+            // Add to DOM with custom ID and data-correct attribute
+            optionsData.forEach((opt, index) => {
+                optsContainer.innerHTML += `<div class="option" id="opt-${index}" data-correct="${opt.isCorrect}" draggable="true">${opt.html}</div>`;
+            });
+
+            setupEvents();
+        }
+
+        function setupEvents() {
+            const options = document.querySelectorAll('.option');
+            const dropZone = document.getElementById('drop-zone');
+
+            options.forEach(opt => {
+                // Drag start event - send only the unique ID
+                opt.addEventListener('dragstart', (e) => {
+                    if(isProcessing) return;
+                    e.dataTransfer.setData('text/plain', opt.id);
+                });
+                
+                // Click support
+                opt.addEventListener('click', () => {
+                    if(isProcessing) return;
+                    const isCorrect = opt.dataset.correct === 'true';
+                    checkAnswer(isCorrect, opt.innerHTML, opt);
+                });
+            });
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('hover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('hover');
+            });
+
+            // Drop event
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('hover');
+                if(isProcessing) return;
+                
+                const optId = e.dataTransfer.getData('text/plain');
+                const optElement = document.getElementById(optId);
+                
+                if(optElement) {
+                    const isCorrect = optElement.dataset.correct === 'true';
+                    checkAnswer(isCorrect, optElement.innerHTML, optElement);
+                }
+            });
+        }
+
+        function checkAnswer(isCorrect, htmlContent, clickedElement) {
+            isProcessing = true;
+            const dropZone = document.getElementById('drop-zone');
+
+            if(isCorrect) {
+                feedback.innerHTML = 'ખૂબ સરસ!';
+                feedback.className = 'feedback correct';
+                dropZone.innerHTML = htmlContent;
+                dropZone.classList.add('filled');
+                
+                setTimeout(() => {
+                    currentQIndex++;
+                    if(currentQIndex < questions.length) {
+                        loadQuestion();
+                    } else {
+                        document.getElementById('game-container').innerHTML = `
+                            <h2 style="color: #4CAF50; font-size: 32px;">તમે બધી પેટર્ન પૂર્ણ કરી છે! <br>અભિનંદન! 🎉</h2>
+                            <button class="btn-restart" onclick="location.reload()">ફરીથી રમો</button>
+                        `;
+                    }
+                }, 1500);
+            } else {
+                feedback.innerHTML = 'ખોટો જવાબ';
+                feedback.className = 'feedback wrong';
+                if(clickedElement) clickedElement.style.borderColor = '#f44336';
+                
+                setTimeout(() => {
+                    feedback.innerHTML = '';
+                    feedback.className = 'feedback';
+                    if(clickedElement) clickedElement.style.borderColor = '#ccc';
+                    isProcessing = false;
+                }, 1200);
+            }
+        }
+
+        // Initialize Game
+        loadQuestion();
+    </script>
+</body>
+</html>
