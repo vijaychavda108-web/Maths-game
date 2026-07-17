@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>વર્તુળની આકૃતિ પરથી ભાગનાં નામ - Drag and Drop Game</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --bg-color: #f0f8ff;
+            --box-bg: #ffffff;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'Shruti', 'Hind Vadodara', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header-title {
+            color: #E91E63;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .instruction {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            align-items: flex-start;
+            background: var(--box-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 950px;
+            width: 100%;
+        }
+        .svg-container {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 15px;
+            border: 2px solid #ddd;
+        }
+        .controls-container {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #fff3e0;
+            border-radius: 15px;
+            border: 2px dashed #ff9800;
+            min-height: 60px;
+        }
+        .word-item {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: grab;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            user-select: none;
+            touch-action: none;
+        }
+        .word-item:active {
+            cursor: grabbing;
+        }
+        /* કલર કોડિંગ શબ્દો માટે */
+        .word-item[data-value="radius"] { background-color: #00BCD4; }
+        .word-item[data-value="center"] { background-color: #E91E63; }
+        .word-item[data-value="chord"] { background-color: #9C27B0; }
+        .word-item[data-value="diameter"] { background-color: #4CAF50; }
+
+        .target-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .target-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            background: #f1f8e9;
+            padding: 5px 15px;
+            border-radius: 10px;
+            border: 1px solid #c5e1a5;
+        }
+        .question-text {
+            width: 100px;
+            color: #33691E;
+        }
+        .target-box {
+            flex: 1;
+            height: 45px;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fafafa;
+            transition: all 0.3s;
+        }
+        .target-box.drag-over {
+            background-color: #e8f5e9;
+            border-color: #4CAF50;
+        }
+        .target-box .word-item {
+            margin: 0;
+            box-shadow: none;
+            width: 90%;
+            text-align: center;
+            padding: 5px 0;
+        }
+        .btn-check, .btn-reset {
+            padding: 12px 25px;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .btn-check {
+            background-color: #4CAF50;
+        }
+        .btn-check:hover { background-color: #45a049; }
+        .btn-reset {
+            background-color: #f44336;
+            display: none;
+        }
+        .btn-reset:hover { background-color: #d32f2f; }
+        .feedback {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            min-height: 50px;
+            margin-top: 20px;
+            animation: popIn 0.5s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .footer {
+            margin-top: 40px;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+        
+        /* મોબાઈલ માટે ખાસ ડિઝાઇન સુધારા */
+        @media (max-width: 600px) {
+            .target-row { font-size: 1.2rem; }
+            .question-text { width: 80px; }
+            .word-item { font-size: 1rem; padding: 8px 12px; }
+            .svg-container svg { width: 250px; height: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="header-title">વર્તુળના ભાગનાં નામ જણાવો</h1>
+    <p class="instruction">૭. નીચે આપેલી વર્તુળની આકૃતિ પરથી તેના ભાગનાં નામ ખેંચીને (Drag) યોગ્ય ખાલી જગ્યામાં મૂકો.</p>
+
+    <div class="game-container">
+        <div class="svg-container">
+            <svg width="320" height="320" viewBox="0 0 320 320">
+                <circle cx="160" cy="160" r="120" stroke="#2c3e50" stroke-width="3" fill="#e3f2fd" />
+                
+                <circle cx="160" cy="160" r="4" fill="#000" />
+                <text x="165" y="152" font-size="20" font-weight="bold">O</text>
+
+                <line x1="40" y1="160" x2="280" y2="160" stroke="#2c3e50" stroke-width="2" />
+                <text x="20" y="165" font-size="20" font-weight="bold">A</text>
+                <text x="288" y="165" font-size="20" font-weight="bold">B</text>
+
+                <line x1="160" y1="160" x2="75" y2="245" stroke="#2c3e50" stroke-width="2" />
+                <text x="58" y="260" font-size="20" font-weight="bold">P</text>
+
+                <line x1="160" y1="160" x2="245" y2="245" stroke="#2c3e50" stroke-width="2" />
+                <text x="250" y="260" font-size="20" font-weight="bold">Q</text>
+
+                <line x1="56" y1="100" x2="220" y2="56" stroke="#2c3e50" stroke-width="2" />
+                <text x="35" y="108" font-size="20" font-weight="bold">M</text>
+                <text x="230" y="52" font-size="20" font-weight="bold">N</text>
+            </svg>
+        </div>
+
+        <div class="controls-container">
+            <div class="word-bank" id="word-bank" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-center" data-value="center">કેન્દ્ર</div>
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-chord" data-value="chord">જીવા</div>
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-diameter" data-value="diameter">વ્યાસ</div>
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-radius-1" data-value="radius">ત્રિજ્યા</div>
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-radius-2" data-value="radius">ત્રિજ્યા</div>
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-radius-3" data-value="radius">ત્રિજ્યા</div>
+                <div class="word-item" draggable="true" ondragstart="drag(event)" id="word-radius-4" data-value="radius">ત્રિજ્યા</div>
+            </div>
+
+            <div class="target-list">
+                <div class="target-row">
+                    <span class="question-text">(૧) O =</span> 
+                    <div class="target-box" id="box-1" data-expected="center" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+                <div class="target-row">
+                    <span class="question-text">(૨) OP =</span> 
+                    <div class="target-box" id="box-2" data-expected="radius" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+                <div class="target-row">
+                    <span class="question-text">(૩) MN =</span> 
+                    <div class="target-box" id="box-3" data-expected="chord" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+                <div class="target-row">
+                    <span class="question-text">(૪) AO =</span> 
+                    <div class="target-box" id="box-4" data-expected="radius" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+                <div class="target-row">
+                    <span class="question-text">(૫) OB =</span> 
+                    <div class="target-box" id="box-5" data-expected="radius" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+                <div class="target-row">
+                    <span class="question-text">(૬) OQ =</span> 
+                    <div class="target-box" id="box-6" data-expected="radius" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+                <div class="target-row">
+                    <span class="question-text">(૭) AB =</span> 
+                    <div class="target-box" id="box-7" data-expected="diameter" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></div>
+                </div>
+            </div>
+
+            <button class="btn-check" id="checkBtn" onclick="checkAnswers()">જવાબ ચકાસો</button>
+            <button class="btn-reset" id="resetBtn" onclick="resetGame()">ફરીથી રમો</button>
+        </div>
+    </div>
+
+    <div class="feedback" id="feedback-msg"></div>
+
+    <div class="footer">
+        created by : વિજયકુમાર ચાવડા <br>
+        શાળા: દાદાના મુવાડા પ્રા શાળા
+    </div>
+
+    <script>
+        function allowDrop(ev) {
+            ev.preventDefault();
+            if (ev.target.classList.contains('target-box')) {
+                ev.target.classList.add('drag-over');
+            }
+        }
+
+        function dragLeave(ev) {
+            if (ev.target.classList.contains('target-box')) {
+                ev.target.classList.remove('drag-over');
+            }
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            clearFeedback();
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            
+            if (ev.target.classList.contains('target-box')) {
+                ev.target.classList.remove('drag-over');
+            }
+
+            var data = ev.dataTransfer.getData("text");
+            var draggedElement = document.getElementById(data);
+            
+            if (!draggedElement) return;
+
+            // ૧. જો ખાલી બોક્સમાં ડ્રોપ કરવામાં આવે
+            if (ev.target.classList.contains('target-box')) {
+                // જો બોક્સમાં પહેલેથી શબ્દ હોય, તો તેને પાછો બેંકમાં મોકલી દો
+                if (ev.target.children.length > 0) {
+                    document.getElementById('word-bank').appendChild(ev.target.children[0]);
+                }
+                ev.target.appendChild(draggedElement);
+            } 
+            // ૨. જો શબ્દને પાછો વર્ડ બેંકમાં મૂકવામાં આવે
+            else if (ev.target.id === 'word-bank' || ev.target.classList.contains('word-bank')) {
+                document.getElementById('word-bank').appendChild(draggedElement);
+            }
+            // ૩. જો એક શબ્દને બોક્સમાં રહેલા બીજા શબ્દ પર ડ્રોપ કરવામાં આવે (સ્વેપિંગ)
+            else if (ev.target.classList.contains('word-item') && ev.target.parentElement.classList.contains('target-box')) {
+                var parentBox = ev.target.parentElement;
+                document.getElementById('word-bank').appendChild(ev.target);
+                parentBox.appendChild(draggedElement);
+            }
+        }
+
+        function clearFeedback() {
+            document.getElementById('feedback-msg').innerText = "";
+        }
+
+        function checkAnswers() {
+            const boxes = document.querySelectorAll('.target-box');
+            let allCorrect = true;
+            let allFilled = true;
+
+            boxes.forEach(box => {
+                if (box.children.length === 0) {
+                    allFilled = false;
+                } else {
+                    let wordInside = box.children[0];
+                    if (wordInside.dataset.value !== box.dataset.expected) {
+                        allCorrect = false;
+                    }
+                }
+            });
+
+            const feedback = document.getElementById('feedback-msg');
+
+            if (!allFilled) {
+                feedback.innerText = "કૃપા કરીને બધા ખાના ભરો!";
+                feedback.style.color = "#ff9800";
+            } else if (allCorrect) {
+                feedback.innerText = "ખૂબ સરસ!";
+                feedback.style.color = "green";
+                document.getElementById('checkBtn').style.display = 'none';
+                document.getElementById('resetBtn').style.display = 'block';
+            } else {
+                feedback.innerText = "ખોટો જવાબ! પ્રયાસ ચાલુ રાખો.";
+                feedback.style.color = "red";
+            }
+        }
+
+        function resetGame() {
+            const wordBank = document.getElementById('word-bank');
+            const words = document.querySelectorAll('.word-item');
+            
+            // બધા શબ્દોને પાછા વર્ડ બેંકમાં મૂકો અને અસલ ક્રમમાં ગોઠવો
+            const sortedWords = Array.from(words).sort((a, b) => a.id.localeCompare(b.id));
+            sortedWords.forEach(word => {
+                wordBank.appendChild(word);
+            });
+            
+            clearFeedback();
+            document.getElementById('checkBtn').style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

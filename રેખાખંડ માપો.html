@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>રેખાખંડ માપો - શૈક્ષણિક રમત</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            width: 95%;
+            max-width: 750px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 20px;
+            border: 4px solid #FF9800;
+            position: relative;
+        }
+
+        h1 {
+            color: #E91E63;
+            font-size: 28px;
+            margin: 10px 0;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            background: #FFF9C4;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .instructions {
+            font-size: 16px;
+            color: #3F51B5;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* Measurement Area */
+        .measurement-area {
+            background: #F5F5F5;
+            border: 2px dashed #9E9E9E;
+            border-radius: 15px;
+            height: 250px; /* ફિક્સ ઊંચાઈ જેથી ફૂટપટ્ટી ફેરવી શકાય */
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden; /* ફૂટપટ્ટી બહાર ન જાય */
+        }
+
+        .line-segment {
+            height: 8px;
+            background-color: #F44336;
+            position: absolute;
+            top: 60px;
+            left: 40px; /* ફિક્સ જગ્યાએથી શરુ થશે */
+            border-radius: 4px;
+            transition: width 0.3s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .line-segment::before, .line-segment::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background-color: #D32F2F;
+            border-radius: 50%;
+            top: -4px;
+        }
+
+        .line-segment::before { left: -8px; }
+        .line-segment::after { right: -8px; }
+
+        /* Draggable Ruler */
+        .ruler {
+            width: 330px; /* 10 એકમ માટે */
+            height: 45px;
+            background-color: #FFEB3B;
+            border: 2px solid #F57F17;
+            border-radius: 5px;
+            position: absolute;
+            top: 150px; /* શરુઆતમાં રેખાખંડથી નીચે હશે */
+            left: 20px;
+            cursor: grab;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            touch-action: none; /* મોબાઈલમાં સ્ક્રોલ અટકાવવા */
+            z-index: 10;
+        }
+
+        .ruler:active {
+            cursor: grabbing;
+        }
+
+        .tick {
+            width: 2px;
+            background-color: #333;
+            height: 15px;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .tick.major { height: 25px; }
+        
+        .tick span {
+            position: absolute;
+            bottom: 25px;
+            left: -5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* Drop Zone for Answer */
+        .answer-drop-zone {
+            background: #E8F5E9;
+            border: 3px dashed #4CAF50;
+            border-radius: 10px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2E7D32;
+            margin: 15px auto;
+            width: 80%;
+            transition: 0.3s;
+        }
+
+        .answer-drop-zone.hover {
+            background: #C8E6C9;
+            transform: scale(1.05);
+        }
+
+        /* Balloons */
+        .balloons-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        .balloon {
+            width: 65px;
+            height: 80px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: grab;
+            user-select: none;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.2), 2px 4px 6px rgba(0,0,0,0.2);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .balloon:active { cursor: grabbing; }
+
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+        }
+
+        .balloon-string {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            width: 2px;
+            height: 25px;
+            background-color: #777;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .bg-color-1 { background: radial-gradient(circle at 30% 30%, #FF8A80, #D50000); }
+        .bg-color-1::after { border-bottom: 10px solid #D50000; }
+        
+        .bg-color-2 { background: radial-gradient(circle at 30% 30%, #82B1FF, #2962FF); }
+        .bg-color-2::after { border-bottom: 10px solid #2962FF; }
+        
+        .bg-color-3 { background: radial-gradient(circle at 30% 30%, #B9F6CA, #00C853); }
+        .bg-color-3::after { border-bottom: 10px solid #00C853; }
+        
+        .bg-color-4 { background: radial-gradient(circle at 30% 30%, #FFD180, #FF6D00); }
+        .bg-color-4::after { border-bottom: 10px solid #FF6D00; }
+
+        /* Feedback Message */
+        .feedback {
+            font-size: 24px;
+            font-weight: bold;
+            height: 35px;
+            margin: 10px 0;
+        }
+        .success { color: #4CAF50; animation: popIn 0.5s; }
+        .error { color: #F44336; animation: shake 0.5s; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Screens */
+        .hidden { display: none !important; }
+
+        .end-screen h2 { color: #4CAF50; font-size: 32px; }
+        .end-screen p { font-size: 22px; color: #333; }
+        .btn-restart {
+            background-color: #FF9800;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px solid #EEE;
+            font-size: 15px;
+            color: #555;
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .footer p { margin: 3px 0; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div id="gameScreen">
+        <h1>📏 રેખાખંડ માપો</h1>
+        
+        <div class="status-bar">
+            <span>પ્રશ્ન: <span id="qNumber">1</span> / 10</span>
+            <span>સ્કોર: <span id="scoreDisplay">0</span></span>
+        </div>
+
+        <p class="instructions">
+            ૧. ફૂટપટ્ટીને ખેંચીને (Drag) રેખાખંડ પર લઈ જાવ અને તેને માપો.<br>
+            ૨. પછી સાચા જવાબ વાળા ફુગ્ગાને નીચે આપેલા 'જવાબ બોક્સ' માં મૂકો. 
+        </p>
+
+        <div class="measurement-area" id="measureArea">
+            <div class="line-segment" id="lineSegment"></div>
+            
+            <div class="ruler" id="ruler">
+                </div>
+        </div>
+
+        <div class="answer-drop-zone" id="answerDropZone" ondrop="dropBalloon(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+            અહીં ફુગ્ગો મૂકો
+        </div>
+
+        <div class="feedback" id="feedbackMsg"></div>
+
+        <div class="balloons-container" id="balloonsContainer">
+            </div>
+    </div>
+
+    <div id="endScreen" class="end-screen hidden">
+        <h2>🎉 અભિનંદન! 🎉</h2>
+        <p>તમારી રમત પૂર્ણ થઈ.</p>
+        <p>તમારો અંતિમ સ્કોર: <strong id="finalScore" style="color: #E91E63; font-size: 30px;">0</strong> / 10</p>
+        <button class="btn-restart" onclick="initGame()">ફરીથી રમો 🔄</button>
+    </div>
+
+    <div class="footer">
+        <p>created by: વિજયકુમાર ચાવડા</p>
+        <p>શાળા: દાદાના મુવાડા પ્રા. શાળા</p>
+    </div>
+</div>
+
+<script>
+    // --- ગેમ વેરીએબલ્સ ---
+    let currentQuestion = 1;
+    let score = 0;
+    const maxQuestions = 10;
+    let correctAnswer = 0;
+    let isProcessing = false;
+    const pxPerUnit = 30; // ફૂટપટ્ટીના બે અંક વચ્ચેનું અંતર (30 પિક્સલ)
+
+    // ફૂટપટ્ટી બનાવવા માટે
+    function createRuler() {
+        const ruler = document.getElementById('ruler');
+        ruler.innerHTML = ''; // જુનું સાફ કરો
+        for (let i = 0; i <= 10; i++) {
+            let leftPos = (i * pxPerUnit) + 15; // 15px પેડિંગ શરૂઆતમાં રાખવા
+            ruler.innerHTML += `<div class="tick major" style="left: ${leftPos}px;"><span>${i}</span></div>`;
+        }
+    }
+
+    // --- રમતની શરૂઆત ---
+    function initGame() {
+        currentQuestion = 1;
+        score = 0;
+        isProcessing = false;
+        createRuler();
+        document.getElementById('scoreDisplay').innerText = score;
+        document.getElementById('endScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        loadQuestion();
+        setupRulerDrag(); // ફૂટપટ્ટીનો ડ્રેગ ઈવેન્ટ સેટઅપ
+    }
+
+    // --- નવો પ્રશ્ન ---
+    function loadQuestion() {
+        if(currentQuestion > maxQuestions) {
+            showEndScreen();
+            return;
+        }
+        
+        isProcessing = false;
+        document.getElementById('qNumber').innerText = currentQuestion;
+        document.getElementById('feedbackMsg').innerHTML = "";
+        document.getElementById('answerDropZone').classList.remove('hidden');
+        document.getElementById('answerDropZone').innerHTML = "અહીં ફુગ્ગો મૂકો";
+        
+        // ફૂટપટ્ટીને તેની મૂળ જગ્યાએ પરત લાવો
+        const ruler = document.getElementById('ruler');
+        ruler.style.top = '150px';
+        ruler.style.left = '20px';
+
+        correctAnswer = Math.floor(Math.random() * 10) + 1;
+        
+        // રેખાખંડની લંબાઈ સેટ કરો (માપ ગુણ્યા 30 પિક્સલ)
+        document.getElementById('lineSegment').style.width = (correctAnswer * pxPerUnit) + "px";
+        
+        // 4 વિકલ્પો બનાવો
+        let options = [correctAnswer];
+        while(options.length < 4) {
+            let rand = Math.floor(Math.random() * 10) + 1;
+            if(!options.includes(rand)) {
+                options.push(rand);
+            }
+        }
+        options.sort(() => Math.random() - 0.5); // શફલ
+        
+        let balloonsHTML = "";
+        options.forEach((opt, index) => {
+            let colorClass = `bg-color-${index + 1}`;
+            balloonsHTML += `
+                <div class="balloon ${colorClass}" draggable="true" 
+                     ondragstart="dragBalloonStart(event)" 
+                     onclick="handleAnswer(${opt})" 
+                     data-value="${opt}">
+                    ${opt}
+                    <div class="balloon-string"></div>
+                </div>
+            `;
+        });
+        document.getElementById('balloonsContainer').innerHTML = balloonsHTML;
+    }
+
+    // --- ફૂટપટ્ટી ડ્રેગ કરવા માટેનું લોજીક ---
+    function setupRulerDrag() {
+        const ruler = document.getElementById('ruler');
+        const container = document.getElementById('measureArea');
+        
+        let isDraggingRuler = false;
+        let startX, startY, initialLeft, initialTop;
+
+        function startDrag(e) {
+            isDraggingRuler = true;
+            let event = e.type.includes('touch') ? e.touches[0] : e;
+            startX = event.clientX;
+            startY = event.clientY;
+            initialLeft = ruler.offsetLeft;
+            initialTop = ruler.offsetTop;
+            ruler.style.zIndex = '100'; // સૌથી ઉપર રાખવા
+        }
+
+        function doDrag(e) {
+            if (!isDraggingRuler) return;
+            e.preventDefault(); // મોબાઈલમાં સ્ક્રીન હલતી અટકાવવા
+            let event = e.type.includes('touch') ? e.touches[0] : e;
+            
+            let dx = event.clientX - startX;
+            let dy = event.clientY - startY;
+            
+            ruler.style.left = (initialLeft + dx) + 'px';
+            ruler.style.top = (initialTop + dy) + 'px';
+        }
+
+        function endDrag() {
+            isDraggingRuler = false;
+            ruler.style.zIndex = '10';
+        }
+
+        // માઉસ માટે
+        ruler.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('mouseup', endDrag);
+
+        // મોબાઈલ ટચ માટે
+        ruler.addEventListener('touchstart', startDrag, {passive: false});
+        document.addEventListener('touchmove', doDrag, {passive: false});
+        document.addEventListener('touchend', endDrag);
+    }
+
+    // --- ફુગ્ગા ડ્રેગ એન્ડ ડ્રોપ લોજીક ---
+    function dragBalloonStart(ev) {
+        if(isProcessing) return;
+        ev.dataTransfer.setData("text", ev.target.getAttribute("data-value"));
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+        document.getElementById('answerDropZone').classList.add('hover');
+    }
+
+    function dragLeave(ev) {
+        document.getElementById('answerDropZone').classList.remove('hover');
+    }
+
+    function dropBalloon(ev) {
+        ev.preventDefault();
+        if(isProcessing) return;
+        document.getElementById('answerDropZone').classList.remove('hover');
+        
+        let data = ev.dataTransfer.getData("text");
+        if(data) {
+            handleAnswer(parseInt(data));
+        }
+    }
+
+    // --- જવાબ ચેક કરવા ---
+    function handleAnswer(selectedValue) {
+        if(isProcessing) return;
+        isProcessing = true; 
+        
+        const feedback = document.getElementById('feedbackMsg');
+        const dropZone = document.getElementById('answerDropZone');
+        
+        dropZone.innerHTML = `જવાબ: ${selectedValue}`;
+        
+        if(selectedValue === correctAnswer) {
+            feedback.innerHTML = "<span class='success'>ખૂબ સરસ!</span>";
+            score++;
+            document.getElementById('scoreDisplay').innerText = score;
+            dropZone.style.backgroundColor = '#C8E6C9';
+            dropZone.style.borderColor = '#4CAF50';
+        } else {
+            feedback.innerHTML = "<span class='error'>ખોટો જવાબ !</span>";
+            dropZone.style.backgroundColor = '#FFCDD2';
+            dropZone.style.borderColor = '#F44336';
+        }
+        
+        document.getElementById('balloonsContainer').innerHTML = ""; // ફુગ્ગા ગાયબ
+        currentQuestion++;
+        
+        setTimeout(() => {
+            dropZone.style.backgroundColor = '#E8F5E9';
+            dropZone.style.borderColor = '#4CAF50';
+            loadQuestion();
+        }, 1500);
+    }
+
+    // --- અંતિમ સ્ક્રીન ---
+    function showEndScreen() {
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('endScreen').classList.remove('hidden');
+        document.getElementById('finalScore').innerText = score;
+    }
+
+    window.onload = initGame;
+</script>
+
+</body>
+</html>
