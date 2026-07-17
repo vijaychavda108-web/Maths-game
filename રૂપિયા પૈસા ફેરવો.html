@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>જાદુઈ કરન્સી મશીન - રૂપિયા અને પૈસા</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle, #ffecd2 0%, #fcb69f 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #d32f2f;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 40px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            border: 4px dashed #ff9800;
+        }
+
+        #game-container, #result-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            border: 5px solid #8e24aa;
+        }
+
+        #result-container {
+            display: none;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .q-counter {
+            color: #1976d2;
+            background: #e3f2fd;
+            padding: 8px 15px;
+            border-radius: 15px;
+        }
+
+        .score-display {
+            color: #388e3c;
+            background: #e8f5e9;
+            padding: 8px 15px;
+            border-radius: 15px;
+        }
+
+        .instruction {
+            font-size: 20px;
+            color: #555;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* Magic Machine UI */
+        .magic-machine {
+            background: linear-gradient(145deg, #9c27b0, #6a1b9a);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .machine-screen {
+            background: #b2dfdb;
+            border: 5px solid #4db6ac;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #004d40;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .slot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slot-label {
+            color: #fff;
+            margin-bottom: 5px;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .drop-zone {
+            width: 150px;
+            height: 60px;
+            background: #212121;
+            border-radius: 30px;
+            border: 4px solid #424242;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #757575;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        .drop-zone.hover {
+            border-color: #ffeb3b;
+            box-shadow: 0 0 20px #ffeb3b, inset 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        .drop-zone.filled {
+            background: #4caf50;
+            border-color: #fff;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Options (Coins/Notes) */
+        .options-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .option {
+            background: linear-gradient(135deg, #ffd54f, #ffb300);
+            border: 4px solid #ff8f00;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #3e2723;
+            cursor: grab;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2), inset 0 -4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            text-align: center;
+            padding: 10px;
+            line-height: 1.2;
+        }
+
+        .option:active {
+            cursor: grabbing;
+            transform: scale(0.9);
+        }
+
+        .option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+        }
+
+        .feedback {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 20px;
+            min-height: 45px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .correct {
+            color: #4CAF50;
+            opacity: 1;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .wrong {
+            color: #f44336;
+            opacity: 1;
+            animation: shake 0.5s;
+        }
+
+        .final-score {
+            font-size: 48px;
+            color: #ff9800;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-action {
+            background: #ff5722;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-action:hover {
+            background: #e64a19;
+            transform: scale(1.05);
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 18px;
+            color: #4a148c;
+            background: rgba(255,255,255,0.85);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid white;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-15px); }
+            40%, 80% { transform: translateX(15px); }
+        }
+
+        /* Mobile Responsive */
+        @media(max-width: 600px) {
+            .option { width: 85px; height: 85px; font-size: 16px; }
+            .machine-screen { font-size: 24px; padding: 15px; }
+            .drop-zone { width: 120px; height: 50px; }
+            h1 { font-size: 24px; padding: 10px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✨ જાદુઈ કરન્સી મશીન ✨</h1>
+
+    <div id="game-container">
+        <div class="header-info">
+            <div class="q-counter" id="q-counter">પ્રશ્ન: ૧/૧૦</div>
+            <div class="score-display" id="score-display">સ્કોર: ૦</div>
+        </div>
+
+        <div class="instruction">સાચા જવાબને મશીનના સ્લોટમાં નાખો (અથવા ક્લિક કરો)</div>
+        
+        <div class="magic-machine">
+            <div class="machine-screen" id="question-text">₹ ૫ = ?</div>
+            <div class="slot-container">
+                <div class="slot-label">અહીં જવાબ નાખો</div>
+                <div class="drop-zone" id="drop-zone"></div>
+            </div>
+        </div>
+
+        <div class="options-container" id="options-container">
+            <!-- Options injected by JS -->
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div id="result-container">
+        <h2>રમત પૂર્ણ થઈ! 🌟</h2>
+        <p style="font-size: 24px; color: #555;">તમારું પરિણામ નીચે મુજબ છે:</p>
+        <div class="final-score" id="final-score">૧૦ / ૧૦</div>
+        <button class="btn-action" onclick="location.reload()">ફરીથી રમો 🔄</button>
+    </div>
+
+    <div class="footer">
+        Created by: વિજયકુમાર ચાવડા <br>
+        શાળા: દાદાના મુવાડા પ્રા શાળા
+    </div>
+
+    <script>
+        // 10 પ્રશ્નોનું લિસ્ટ (રૂપિયા થી પૈસા અને પૈસા થી રૂપિયા)
+        const allQuestions = [
+            { q: "₹ ૫ = કેટલા પૈસા?", ans: "૫૦૦<br>પૈસા", options: ["૫૦<br>પૈસા", "૫૦૦<br>પૈસા", "૫<br>પૈસા"] },
+            { q: "૯૦૦ પૈસા = કેટલા રૂપિયા?", ans: "₹ ૯", options: ["₹ ૯૦", "₹ ૯", "₹ ૯૦૦"] },
+            { q: "₹ ૨ = કેટલા પૈસા?", ans: "૨૦૦<br>પૈસા", options: ["૨૦<br>પૈસા", "૨૦૦<br>પૈસા", "૨૦૦૦<br>પૈસા"] },
+            { q: "૪૦૦ પૈસા = કેટલા રૂપિયા?", ans: "₹ ૪", options: ["₹ ૪૦", "₹ ૪૦૦", "₹ ૪"] },
+            { q: "₹ ૭ = કેટલા પૈસા?", ans: "૭૦૦<br>પૈસા", options: ["૭૦<br>પૈસા", "૭૦૦<br>પૈસા", "૭<br>પૈસા"] },
+            { q: "૧૫૦ પૈસા = કેટલા રૂપિયા?", ans: "₹ ૧.૫૦", options: ["₹ ૧૫", "₹ ૧.૫૦", "₹ ૧૫૦"] },
+            { q: "₹ ૮ = કેટલા પૈસા?", ans: "૮૦૦<br>પૈસા", options: ["૮૦<br>પૈસા", "૮૦૦<br>પૈસા", "૮૦૦૦<br>પૈસા"] },
+            { q: "૩૫૦ પૈસા = કેટલા રૂપિયા?", ans: "₹ ૩.૫૦", options: ["₹ ૩૫", "₹ ૩.૫૦", "₹ ૩૦.૫૦"] },
+            { q: "₹ ૧૦ = કેટલા પૈસા?", ans: "૧૦૦૦<br>પૈસા", options: ["૧૦૦<br>પૈસા", "૧૦૦૦<br>પૈસા", "૧૦<br>પૈસા"] },
+            { q: "૬૦૦ પૈસા = કેટલા રૂપિયા?", ans: "₹ ૬", options: ["₹ ૬૦", "₹ ૬", "₹ ૬૦૦"] }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let isProcessing = false;
+
+        const qCounter = document.getElementById('q-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionText = document.getElementById('question-text');
+        const optsContainer = document.getElementById('options-container');
+        const dropZone = document.getElementById('drop-zone');
+        const feedback = document.getElementById('feedback');
+        
+        // વિકલ્પોને આડાઅવળા (Shuffle) કરવા માટે
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            isProcessing = false;
+            feedback.className = 'feedback';
+            feedback.innerHTML = '';
+            dropZone.innerHTML = '';
+            dropZone.className = 'drop-zone';
+            
+            const q = allQuestions[currentQIndex];
+            qCounter.innerHTML = `પ્રશ્ન: ${currentQIndex + 1} / ${allQuestions.length}`;
+            scoreDisplay.innerHTML = `સ્કોર: ${score}`;
+            questionText.innerHTML = q.q;
+
+            // વિકલ્પો તૈયાર કરવા
+            optsContainer.innerHTML = '';
+            let optionsData = q.options.map(opt => ({
+                html: opt,
+                isCorrect: opt === q.ans
+            }));
+            optionsData = shuffleArray(optionsData);
+            
+            optionsData.forEach((opt, index) => {
+                optsContainer.innerHTML += `<div class="option" id="opt-${index}" data-correct="${opt.isCorrect}" draggable="true">${opt.html}</div>`;
+            });
+
+            setupEvents();
+        }
+
+        function setupEvents() {
+            const options = document.querySelectorAll('.option');
+
+            options.forEach(opt => {
+                // Drag start
+                opt.addEventListener('dragstart', (e) => {
+                    if(isProcessing) return;
+                    e.dataTransfer.setData('text/plain', opt.id);
+                });
+                
+                // Click (Mobile મૈત્રીપૂર્ણ)
+                opt.addEventListener('click', () => {
+                    if(isProcessing) return;
+                    processAnswer(opt);
+                });
+            });
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if(!isProcessing) dropZone.classList.add('hover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('hover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('hover');
+                if(isProcessing) return;
+                
+                const optId = e.dataTransfer.getData('text/plain');
+                const optElement = document.getElementById(optId);
+                
+                if(optElement) {
+                    processAnswer(optElement);
+                }
+            });
+        }
+
+        function processAnswer(optElement) {
+            isProcessing = true;
+            const isCorrect = optElement.dataset.correct === 'true';
+            
+            // સ્લોટમાં જવાબ બતાવવો
+            dropZone.innerHTML = optElement.innerHTML.replace('<br>', ' ');
+            dropZone.classList.add('filled');
+
+            if(isCorrect) {
+                feedback.innerHTML = 'ખૂબ સરસ! 🎉';
+                feedback.className = 'feedback correct';
+                dropZone.style.background = '#4CAF50';
+                score++;
+                scoreDisplay.innerHTML = `સ્કોર: ${score}`;
+            } else {
+                feedback.innerHTML = 'ખોટો જવાબ ❌';
+                feedback.className = 'feedback wrong';
+                dropZone.style.background = '#f44336';
+                optElement.style.borderColor = '#f44336';
+            }
+            
+            // 1.5 સેકન્ડ પછી આપોઆપ આગળનો પ્રશ્ન 
+            setTimeout(() => {
+                currentQIndex++;
+                if(currentQIndex < allQuestions.length) {
+                    loadQuestion();
+                } else {
+                    endGame();
+                }
+            }, 1500);
+        }
+
+        function endGame() {
+            document.getElementById('game-container').style.display = 'none';
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.style.display = 'block';
+            
+            // સ્કોર બતાવવો
+            const finalScore = document.getElementById('final-score');
+            finalScore.innerHTML = `${score} / ${allQuestions.length}`;
+            
+            // સ્કોર પ્રમાણે રંગ 
+            if(score === allQuestions.length) {
+                finalScore.style.color = '#4CAF50';
+                resultContainer.innerHTML = '<h2>અદ્ભુત! પૂરેપૂરા માર્ક્સ! 🏆</h2>' + resultContainer.innerHTML;
+            } else if(score >= 5) {
+                finalScore.style.color = '#ff9800';
+            } else {
+                finalScore.style.color = '#f44336';
+            }
+        }
+
+        // ગેમ શરૂ કરો
+        loadQuestion();
+    </script>
+</body>
+</html>
