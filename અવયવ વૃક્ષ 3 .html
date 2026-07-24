@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અવયવ વૃક્ષ - ડ્રેગ એન્ડ ડ્રોપ ગેમ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f9f9;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 28px;
+        }
+        .instruction {
+            font-size: 16px;
+            color: #e67e22;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .hint {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Tree Structure CSS --- */
+        .tree-container {
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+        .tree {
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .tree ul {
+            padding-top: 20px; 
+            position: relative;
+            display: flex;
+            justify-content: center;
+            padding-left: 0;
+            margin: 0;
+        }
+        .tree li {
+            list-style-type: none;
+            position: relative;
+            padding: 20px 15px 0 15px;
+            text-align: center;
+        }
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute; top: 0; right: 50%;
+            border-top: 2px solid #bdc3c7;
+            width: 50%; height: 20px;
+        }
+        .tree li::after {
+            right: auto; left: 50%;
+            border-left: 2px solid #bdc3c7;
+        }
+        .tree li:only-child::after, .tree li:only-child::before {
+            display: none;
+        }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after {
+            border: 0 none;
+        }
+        .tree li:last-child::before {
+            border-right: 2px solid #bdc3c7;
+            border-radius: 0 5px 0 0;
+        }
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+        .tree ul ul::before {
+            content: '';
+            position: absolute; top: 0; left: 50%;
+            border-left: 2px solid #bdc3c7;
+            width: 0; height: 20px;
+            transform: translateX(-50%);
+        }
+
+        /* --- Nodes & Slots --- */
+        .node {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .root-node {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            background-color: #3498db;
+            color: white;
+            font-size: 32px;
+            margin: 0 auto;
+        }
+        .empty-slot {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px dashed #95a5a6;
+            background-color: #ecf0f1;
+            margin: 0 auto;
+            position: relative;
+            transition: 0.3s;
+        }
+        .empty-slot.hovered {
+            background-color: #d1f2eb;
+            border-color: #1abc9c;
+            transform: scale(1.1);
+        }
+
+        /* --- Pool Area (Green Circles) --- */
+        .pool-area {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background-color: #fdfefe;
+            border: 2px solid #eaeded;
+            border-radius: 15px;
+            min-height: 80px;
+        }
+        .number-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4);
+            position: absolute; 
+            top: -3px; left: -3px;
+        }
+        .pool-area .number-circle {
+            position: relative;
+            top: 0; left: 0;
+        }
+        
+        /* ખરા અને ખોટાના નિશાન */
+        .mark-icon {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        .mark-correct { background-color: #27ae60; }
+        .mark-wrong { background-color: #e74c3c; }
+
+        /* Buttons & Messages */
+        .btn-group { margin-top: 25px; }
+        .action-btn {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 0 10px;
+            color: white;
+            transition: 0.2s;
+        }
+        .submit-btn { background-color: #f39c12; }
+        .submit-btn:hover { background-color: #e67e22; }
+        .next-btn { background-color: #9b59b6; display: none; }
+        .next-btn:hover { background-color: #8e44ad; }
+        
+        .message {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 30px;
+        }
+        
+        /* સાચો જવાબ બતાવવાનું બોક્સ */
+        .correct-ans-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #d4efdf;
+            border: 2px dashed #27ae60;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #1e8449;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* --- Footer (Created By) --- */
+        .footer-credit {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px dashed #bdc3c7;
+            font-size: 18px;
+            color: #34495e;
+            line-height: 1.6;
+        }
+        .footer-credit b {
+            color: #2c3e50;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>સાચું અવયવ વૃક્ષ બનાવો</h1>
+    <div class="hint">
+        <b>ખાસ નોંધ:</b> જે ગોળની નીચે નવી ડાળીઓ (લાઈનો) જતી હોય, તેમાં એવી સંખ્યા મૂકો જેના હજી ભાગ પડતા હોય. છેલ્લે અવિભાજ્ય સંખ્યા જ આવવી જોઈએ.
+    </div>
+    <div class="instruction">
+        નીચેના લીલા ગોળમાંથી સાચા અંકો ખેંચીને (ડ્રેગ કરીને) વૃક્ષના ખાલી ગોળમાં મૂકો.
+    </div>
+    
+    <div class="tree-container" id="treeContainer"></div>
+
+    <div class="message" id="messageArea"></div>
+    
+    <div class="correct-ans-box" id="correctAnsBox"></div>
+
+    <div class="btn-group">
+        <button class="action-btn submit-btn" id="submitBtn" onclick="checkAnswers()">સબમિટ કરો (ચકાસો)</button>
+        <button class="action-btn next-btn" id="nextBtn" onclick="initGame()">નવી રમત</button>
+    </div>
+
+    <h3 style="color: #7f8c8d; margin-top: 30px;">અંકો (સાચા અને ખોટા ભેગા છે)</h3>
+    <div class="pool-area" id="poolArea"></div>
+
+    <div class="footer-credit">
+        Created by: <b>વિજયકુમાર ચાવડા</b><br>
+        શાળા : દાદાના મુવાડા પ્રા. શાળા
+    </div>
+</div>
+
+<script>
+    const goodNumbers = [12, 16, 18, 20, 24, 28, 30, 32, 36, 40, 45, 48, 50, 54, 56, 60];
+    let slotCounter = 0;
+    let draggedItemId = null;
+    let poolData = [];
+    let currentGlobalNumber = 0;
+
+    function initGame() {
+        currentGlobalNumber = goodNumbers[Math.floor(Math.random() * goodNumbers.length)];
+        slotCounter = 0;
+        poolData = [];
+
+        // વૃક્ષનું માળખું બનાવો
+        let treeObj = createTreeStructure(currentGlobalNumber);
+        
+        let treeHTML = `<div class="tree"><ul><li>`;
+        treeHTML += `<div class="node root-node" id="root-node">${treeObj.val}</div>`;
+        treeHTML += `<ul>`;
+        treeHTML += buildNodeHTML(treeObj.left);
+        treeHTML += buildNodeHTML(treeObj.right);
+        treeHTML += `</ul></li></ul></div>`;
+        
+        document.getElementById('treeContainer').innerHTML = treeHTML;
+
+        // --- નવો સુધારો: તમામ શક્ય અંકો પૂલમાં ઉમેરો ---
+        
+        // 1. અવિભાજ્ય અવયવો (Prime Factors - પાંદડા માટે)
+        let primes = getPrimeFactorsList(currentGlobalNumber);
+        poolData.push(...primes);
+
+        // 2. વિભાજ્ય અવયવો (Composite Factors - ડાળીઓ માટે)
+        for(let i = 2; i < currentGlobalNumber; i++) {
+            if(currentGlobalNumber % i === 0 && !isPrime(i)) {
+                poolData.push(i);
+            }
+        }
+
+        // 3. ખોટા અંકો (Distractors) - જે અવયવ ન હોય તેવા
+        let numDistractors = 3;
+        let count = 0;
+        while(count < numDistractors) {
+            let distractor = Math.floor(Math.random() * 12) + 2;
+            if (currentGlobalNumber % distractor !== 0 && !poolData.includes(distractor)) {
+                poolData.push(distractor);
+                count++;
+            }
+        }
+
+        // અંકોને આડાઅવળા કરો
+        poolData.sort(() => Math.random() - 0.5);
+        renderPool();
+
+        document.getElementById('messageArea').innerHTML = '';
+        document.getElementById('correctAnsBox').style.display = 'none';
+        document.getElementById('submitBtn').style.display = 'inline-block';
+        document.getElementById('nextBtn').style.display = 'none';
+    }
+
+    function createTreeStructure(num) {
+        if (num <= 3 || isPrime(num)) return { val: num, isLeaf: true };
+        
+        let f1 = 2;
+        while (num % f1 !== 0) f1++;
+        let f2 = num / f1;
+        
+        return {
+            val: num,
+            isLeaf: false,
+            left: createTreeStructure(f1),
+            right: createTreeStructure(f2)
+        };
+    }
+
+    function isPrime(n) {
+        for(let i = 2; i < n; i++) if(n % i === 0) return false;
+        return n > 1;
+    }
+
+    function getPrimeFactorsList(n) {
+        let factors = [];
+        let divisor = 2;
+        while (n >= 2) {
+            if (n % divisor === 0) {
+                factors.push(divisor);
+                n = n / divisor;
+            } else {
+                divisor++;
+            }
+        }
+        return factors;
+    }
+
+    function buildNodeHTML(node) {
+        let html = `<li>`;
+        let slotId = 'slot-' + slotCounter++;
+
+        html += `<div class="node empty-slot" id="${slotId}" 
+                  ondragover="dragOver(event)" ondragenter="dragEnter(event)" 
+                  ondragleave="dragLeave(event)" ondrop="dragDrop(event, '${slotId}')" 
+                  onclick="slotClick('${slotId}')"></div>`;
+        
+        if (!node.isLeaf) {
+            html += `<ul>`;
+            html += buildNodeHTML(node.left);
+            html += buildNodeHTML(node.right);
+            html += `</ul>`;
+        }
+        html += `</li>`;
+        return html;
+    }
+
+    function renderPool() {
+        const poolArea = document.getElementById('poolArea');
+        poolArea.innerHTML = '';
+        
+        poolData.forEach((num, index) => {
+            const circle = document.createElement('div');
+            circle.className = 'number-circle';
+            circle.innerText = num;
+            circle.setAttribute('data-val', num);
+            circle.setAttribute('draggable', 'true');
+            circle.id = `num-${index}`;
+            
+            circle.addEventListener('dragstart', dragStart);
+            circle.addEventListener('dragend', dragEnd);
+            circle.addEventListener('click', function() {
+                if (this.parentElement.id === 'poolArea') moveToFirstEmptySlot(this);
+            });
+
+            poolArea.appendChild(circle);
+        });
+        
+        poolArea.addEventListener('dragover', (e) => e.preventDefault());
+        poolArea.addEventListener('drop', dropToPool);
+    }
+
+    // Drag and Drop Logic
+    function dragStart(e) {
+        draggedItemId = e.target.id;
+        setTimeout(() => e.target.style.opacity = '0.5', 0);
+    }
+    function dragEnd(e) {
+        e.target.style.opacity = '1';
+        draggedItemId = null;
+        removeMark(e.target);
+    }
+    function dragOver(e) { e.preventDefault(); }
+    function dragEnter(e) { e.target.classList.add('hovered'); }
+    function dragLeave(e) { e.target.classList.remove('hovered'); }
+    
+    function dragDrop(e, slotId) {
+        e.preventDefault();
+        let slot = document.getElementById(slotId);
+        slot.classList.remove('hovered');
+        
+        let draggedEl = document.getElementById(draggedItemId);
+        if(!draggedEl) return;
+
+        if (slot.children.length > 0) {
+            document.getElementById('poolArea').appendChild(slot.children[0]);
+        }
+        slot.appendChild(draggedEl);
+        removeMark(draggedEl);
+    }
+    function dropToPool(e) {
+        e.preventDefault();
+        let draggedEl = document.getElementById(draggedItemId);
+        if(draggedEl) {
+            document.getElementById('poolArea').appendChild(draggedEl);
+            removeMark(draggedEl);
+        }
+    }
+
+    function moveToFirstEmptySlot(el) {
+        const slots = document.querySelectorAll('.empty-slot');
+        for (let slot of slots) {
+            if (slot.children.length === 0) {
+                slot.appendChild(el);
+                removeMark(el);
+                break;
+            }
+        }
+    }
+    function slotClick(slotId) {
+        let slot = document.getElementById(slotId);
+        if(slot.children.length > 0) {
+            let el = slot.children[0];
+            document.getElementById('poolArea').appendChild(el);
+            removeMark(el);
+        }
+    }
+
+    function removeMark(el) {
+        const mark = el.querySelector('.mark-icon');
+        if (mark) el.removeChild(mark);
+        el.style.backgroundColor = '#2ecc71';
+    }
+
+    // Mathematical Validation
+    function getVal(nodeEl) {
+        if (nodeEl.classList.contains('root-node')) {
+            return parseInt(nodeEl.innerText);
+        } else if (nodeEl.children.length > 0) {
+            return parseInt(nodeEl.children[0].getAttribute('data-val'));
+        }
+        return 0; 
+    }
+
+    function markNode(slotEl, isCorrect) {
+        if (slotEl.classList.contains('root-node')) return;
+
+        let circle = slotEl.children[0];
+        if (!circle) return;
+
+        removeMark(circle);
+
+        let mark = document.createElement('div');
+        mark.className = 'mark-icon';
+
+        if (isCorrect) {
+            mark.innerHTML = '✔';
+            mark.classList.add('mark-correct');
+            circle.style.backgroundColor = '#27ae60';
+        } else {
+            mark.innerHTML = '✖';
+            mark.classList.add('mark-wrong');
+            circle.style.backgroundColor = '#e74c3c';
+        }
+        circle.appendChild(mark);
+    }
+
+    function validateNode(nodeEl) {
+        let val = getVal(nodeEl);
+        let ul = nodeEl.nextElementSibling;
+        let isCurrentValid = true;
+
+        if (ul && ul.tagName === 'UL') {
+            let childLis = ul.querySelectorAll(':scope > li');
+            let c1Node = childLis[0].querySelector('.node');
+            let c2Node = childLis[1].querySelector('.node');
+
+            let v1 = getVal(c1Node);
+            let v2 = getVal(c2Node);
+
+            let c1Valid = validateNode(c1Node);
+            let c2Valid = validateNode(c2Node);
+
+            if (val !== v1 * v2) {
+                markNode(c1Node, false);
+                markNode(c2Node, false);
+                isCurrentValid = false;
+            } else {
+                if (c1Valid) { markNode(c1Node, true); } else { markNode(c1Node, false); isCurrentValid = false; }
+                if (c2Valid) { markNode(c2Node, true); } else { markNode(c2Node, false); isCurrentValid = false; }
+            }
+        } else {
+            if (!isPrime(val)) {
+                markNode(nodeEl, false);
+                isCurrentValid = false;
+            } else {
+                isCurrentValid = true;
+                markNode(nodeEl, true);
+            }
+        }
+        return isCurrentValid;
+    }
+
+    function checkAnswers() {
+        const msgBox = document.getElementById('messageArea');
+        let allFilled = true;
+
+        document.querySelectorAll('.empty-slot').forEach(slot => {
+            if (slot.children.length === 0) allFilled = false;
+        });
+
+        if (!allFilled) {
+            msgBox.innerHTML = '<span style="color: #e67e22;">કૃપા કરીને બધા ખાલી ગોળમાં અંકો મૂકો!</span>';
+            return;
+        }
+
+        let rootNode = document.getElementById('root-node');
+        let allCorrect = validateNode(rootNode);
+
+        // સાચો જવાબ બતાવવા માટે
+        let primes = getPrimeFactorsList(currentGlobalNumber);
+        let primeStr = primes.join(' × ');
+        let ansBox = document.getElementById('correctAnsBox');
+        ansBox.innerHTML = `${currentGlobalNumber} ના સાચા અવિભાજ્ય અવયવો:<br> ${primeStr} = ${currentGlobalNumber}`;
+        ansBox.style.display = 'block';
+
+        if (allCorrect) {
+            msgBox.innerHTML = '<span style="color: #27ae60;">અદ્ભુત! તમારું અવયવ વૃક્ષ એકદમ સાચું છે! 🏆</span>';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        } else {
+            msgBox.innerHTML = '<span style="color: #e74c3c;">તમારો જવાબ ખોટો છે. નીચે સાચો જવાબ જોઈને તમારી ભૂલ સુધારો.</span>';
+        }
+    }
+
+    window.onload = initGame;
+</script>
+
+</body>
+</html>
