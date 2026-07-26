@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>અતિસંક્ષિપ્ત સ્વરૂપ ગેમ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .game-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin: 20px;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .equation-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            font-size: 32px;
+            gap: 20px;
+        }
+        .fraction {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .fraction-bar {
+            border-top: 3px solid #333;
+            width: 100%;
+            margin: 5px 0;
+        }
+        .factors-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .slot {
+            width: 50px;
+            height: 50px;
+            border: 2px dashed #999;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+        }
+        .multiply-sign {
+            font-size: 24px;
+            color: #666;
+        }
+        .draggable {
+            width: 46px;
+            height: 46px;
+            background-color: #2196F3;
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .draggable:active {
+            transform: scale(0.95);
+        }
+        .pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            min-height: 80px;
+            padding: 20px;
+            background-color: #e3f2fd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #bbdefb;
+        }
+        .btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            margin: 10px;
+        }
+        .btn:hover { background-color: #e68a00; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+        footer {
+            margin-top: auto;
+            background-color: #333;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 16px;
+        }
+        /* Cancel Mode Styles */
+        .cancel-mode .draggable {
+            cursor: pointer;
+        }
+        .selected-cancel {
+            background-color: #ffeb3b !important;
+            color: #333 !important;
+            border: 2px solid #f57f17;
+        }
+        .crossed-out {
+            background-color: #f44336 !important;
+            text-decoration: line-through;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .final-answer {
+            color: #4CAF50;
+            font-weight: bold;
+            animation: popIn 0.5s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #result-message {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d32f2f;
+            min-height: 30px;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>અતિસંક્ષિપ્ત સ્વરૂપ શોધો</header>
+
+    <div class="game-container" id="game-screen">
+        <div class="status-bar">
+            <span id="question-counter">પ્રશ્ન: 1 / 15</span>
+            <span id="score-display">સ્કોર: 0</span>
+        </div>
+
+        <div class="equation-area">
+            <!-- મૂળ અપૂર્ણાંક -->
+            <div class="fraction" id="original-fraction">
+                <span id="orig-num">12</span>
+                <div class="fraction-bar"></div>
+                <span id="orig-den">18</span>
+            </div>
+            
+            <span>=</span>
+
+            <!-- અવયવો મૂકવાની જગ્યા -->
+            <div class="fraction">
+                <div class="factors-area" id="num-slots"></div>
+                <div class="fraction-bar"></div>
+                <div class="factors-area" id="den-slots"></div>
+            </div>
+
+            <span id="final-equals" class="hidden">=</span>
+
+            <!-- ફાઈનલ જવાબ -->
+            <div class="fraction final-answer hidden" id="final-fraction">
+                <span id="final-num">2</span>
+                <div class="fraction-bar"></div>
+                <span id="final-den">3</span>
+            </div>
+        </div>
+
+        <p id="instruction-text" style="color: #666; font-size: 18px;">અવયવોને ડ્રેગ કરીને (અથવા ક્લિક કરીને) સાચા ખાનામાં મૂકો.</p>
+
+        <!-- ડ્રેગ કરી શકાય તેવા અવયવો -->
+        <div class="pool" id="factor-pool"></div>
+
+        <div id="result-message"></div>
+
+        <div>
+            <button class="btn" id="check-btn" onclick="checkPlacement()">ચકાસો</button>
+            <button class="btn hidden" id="next-btn" onclick="nextQuestion()">આગળનો પ્રશ્ન</button>
+            <button class="btn hidden" id="submit-btn" onclick="submitGame()">Submit</button>
+        </div>
+    </div>
+
+    <div class="game-container hidden" id="score-screen">
+        <h2 style="font-size: 36px; color: #4CAF50;">અભિનંદન!</h2>
+        <p style="font-size: 24px;">તમારો ફાઈનલ સ્કોર:</p>
+        <h1 style="font-size: 60px; color: #ff9800;" id="final-score-text">15 / 15</h1>
+        <button class="btn" onclick="location.reload()">ફરીથી રમો</button>
+    </div>
+
+    <footer>
+        <p>Created by: <b>વિજયકુમાર ચાવડા</b> | <b>શાળા: દાદાના મુવાડા પ્રા. શાળા</b></p>
+    </footer>
+
+    <script>
+        const questions = [
+            { n: 4, d: 6, nf: [2, 2], df: [2, 3], fn: 2, fd: 3 },
+            { n: 6, d: 9, nf: [2, 3], df: [3, 3], fn: 2, fd: 3 },
+            { n: 8, d: 12, nf: [2, 2, 2], df: [2, 2, 3], fn: 2, fd: 3 },
+            { n: 10, d: 15, nf: [2, 5], df: [3, 5], fn: 2, fd: 3 },
+            { n: 12, d: 18, nf: [2, 2, 3], df: [2, 3, 3], fn: 2, fd: 3 },
+            { n: 14, d: 21, nf: [2, 7], df: [3, 7], fn: 2, fd: 3 },
+            { n: 15, d: 20, nf: [3, 5], df: [2, 2, 5], fn: 3, fd: 4 },
+            { n: 16, d: 24, nf: [2, 2, 2, 2], df: [2, 2, 2, 3], fn: 2, fd: 3 },
+            { n: 18, d: 27, nf: [2, 3, 3], df: [3, 3, 3], fn: 2, fd: 3 },
+            { n: 20, d: 30, nf: [2, 2, 5], df: [2, 3, 5], fn: 2, fd: 3 },
+            { n: 24, d: 32, nf: [2, 2, 2, 3], df: [2, 2, 2, 2, 2], fn: 3, fd: 4 },
+            { n: 25, d: 35, nf: [5, 5], df: [5, 7], fn: 5, fd: 7 },
+            { n: 27, d: 36, nf: [3, 3, 3], df: [2, 2, 3, 3], fn: 3, fd: 4 },
+            { n: 28, d: 42, nf: [2, 2, 7], df: [2, 3, 7], fn: 2, fd: 3 },
+            { n: 30, d: 45, nf: [2, 3, 5], df: [3, 3, 5], fn: 2, fd: 3 }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let mode = "DRAG"; // DRAG or CANCEL
+        let cancelSelection = null; // { element, value, location (num/den) }
+        let pairsToCancel = 0;
+        let canceledPairs = 0;
+        let draggedElement = null;
+        let selectedForMove = null; // For click-to-move functionality
+
+        function initGame() {
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            mode = "DRAG";
+            cancelSelection = null;
+            canceledPairs = 0;
+            selectedForMove = null;
+            
+            let q = questions[currentQIndex];
+            document.getElementById('question-counter').innerText = `પ્રશ્ન: ${currentQIndex + 1} / 15`;
+            document.getElementById('orig-num').innerText = q.n;
+            document.getElementById('orig-den').innerText = q.d;
+            document.getElementById('final-num').innerText = q.fn;
+            document.getElementById('final-den').innerText = q.fd;
+            
+            document.getElementById('final-equals').classList.add('hidden');
+            document.getElementById('final-fraction').classList.add('hidden');
+            document.getElementById('check-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('result-message').innerText = "";
+            document.getElementById('result-message').style.color = "#d32f2f";
+            document.getElementById('instruction-text').innerText = "અવયવોને ડ્રેગ કરીને (અથવા ક્લિક કરીને) સાચા ખાનામાં મૂકો.";
+
+            // Calculate common pairs
+            let tempN = [...q.nf];
+            let tempD = [...q.df];
+            pairsToCancel = 0;
+            for(let i=0; i<tempN.length; i++) {
+                let idx = tempD.indexOf(tempN[i]);
+                if(idx !== -1) {
+                    pairsToCancel++;
+                    tempD.splice(idx, 1);
+                }
+            }
+
+            setupSlots('num-slots', q.nf.length, 'num');
+            setupSlots('den-slots', q.df.length, 'den');
+            
+            let allFactors = [...q.nf, ...q.df];
+            allFactors.sort(() => Math.random() - 0.5); // Shuffle
+            
+            let pool = document.getElementById('factor-pool');
+            pool.innerHTML = '';
+            allFactors.forEach((val, index) => {
+                let div = document.createElement('div');
+                div.className = 'draggable';
+                div.innerText = val;
+                div.id = 'factor-' + index;
+                div.setAttribute('draggable', 'true');
+                div.dataset.val = val;
+                
+                // Drag Events
+                div.addEventListener('dragstart', dragStart);
+                
+                // Click to move Events (For mobile/ease)
+                div.addEventListener('click', handleFactorClick);
+                
+                pool.appendChild(div);
+            });
+        }
+
+        function setupSlots(containerId, count, type) {
+            let container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                let slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.dataset.type = type;
+                slot.addEventListener('dragover', dragOver);
+                slot.addEventListener('drop', drop);
+                slot.addEventListener('click', handleSlotClick);
+                container.appendChild(slot);
+                
+                if (i < count - 1) {
+                    let multiply = document.createElement('span');
+                    multiply.className = 'multiply-sign';
+                    multiply.innerHTML = '&times;';
+                    container.appendChild(multiply);
+                }
+            }
+        }
+
+        // --- Drag and Drop Logic ---
+        function dragStart(e) {
+            if (mode !== "DRAG") { e.preventDefault(); return; }
+            draggedElement = e.target;
+            e.dataTransfer.setData('text/plain', e.target.id);
+        }
+
+        function dragOver(e) {
+            if (mode !== "DRAG") return;
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            if (mode !== "DRAG") return;
+            e.preventDefault();
+            let slot = e.target.closest('.slot');
+            if (slot && slot.children.length === 0) {
+                slot.appendChild(draggedElement);
+            }
+        }
+
+        // --- Click-to-Move Logic (Mobile friendly) ---
+        function handleFactorClick(e) {
+            let el = e.target;
+            if (mode === "DRAG") {
+                if (el.parentElement.id === 'factor-pool') {
+                    // Select for moving
+                    if (selectedForMove) selectedForMove.style.border = "none";
+                    selectedForMove = el;
+                    el.style.border = "3px solid #ff9800";
+                } else {
+                    // Clicked inside a slot -> send back to pool
+                    document.getElementById('factor-pool').appendChild(el);
+                    if(selectedForMove === el) {
+                        el.style.border = "none";
+                        selectedForMove = null;
+                    }
+                }
+            } else if (mode === "CANCEL") {
+                handleCancelClick(el);
+            }
+        }
+
+        function handleSlotClick(e) {
+            if (mode === "DRAG" && selectedForMove) {
+                let slot = e.target.closest('.slot');
+                if (slot && slot.children.length === 0) {
+                    selectedForMove.style.border = "none";
+                    slot.appendChild(selectedForMove);
+                    selectedForMove = null;
+                }
+            }
+        }
+
+        // --- Game Logic ---
+        function checkPlacement() {
+            let q = questions[currentQIndex];
+            let numSlots = Array.from(document.getElementById('num-slots').getElementsByClassName('slot'));
+            let denSlots = Array.from(document.getElementById('den-slots').getElementsByClassName('slot'));
+            
+            let userNumFactors = numSlots.map(s => s.children.length > 0 ? parseInt(s.children[0].dataset.val) : null).sort((a,b)=>a-b);
+            let userDenFactors = denSlots.map(s => s.children.length > 0 ? parseInt(s.children[0].dataset.val) : null).sort((a,b)=>a-b);
+            
+            let correctNum = [...q.nf].sort((a,b)=>a-b);
+            let correctDen = [...q.df].sort((a,b)=>a-b);
+            
+            if(userNumFactors.includes(null) || userDenFactors.includes(null)) {
+                document.getElementById('result-message').innerText = "કૃપા કરીને બધા ખાનામાં અવયવો મૂકો.";
+                return;
+            }
+
+            if(JSON.stringify(userNumFactors) === JSON.stringify(correctNum) && JSON.stringify(userDenFactors) === JSON.stringify(correctDen)) {
+                // Correctly placed! Switch to cancel mode
+                mode = "CANCEL";
+                if(selectedForMove) selectedForMove.style.border = "none";
+                selectedForMove = null;
+                
+                document.getElementById('check-btn').classList.add('hidden');
+                document.getElementById('factor-pool').innerHTML = ''; // Clear pool
+                document.getElementById('result-message').style.color = "#4CAF50";
+                document.getElementById('result-message').innerText = "સાચું! હવે અંશ અને છેદમાં રહેલા સમાન અવયવો પર વારાફરતી ક્લિક કરીને છેદ ઉડાડો.";
+                document.getElementById('instruction-text').innerText = "ઉપર અને નીચે સમાન સંખ્યા પર ક્લિક કરો.";
+                document.body.classList.add('cancel-mode');
+            } else {
+                document.getElementById('result-message').innerText = "અવયવો સાચા નથી. ફરીથી પ્રયત્ન કરો.";
+            }
+        }
+
+        function handleCancelClick(el) {
+            if(el.classList.contains('crossed-out')) return;
+
+            let loc = el.closest('#num-slots') ? 'num' : 'den';
+            let val = el.dataset.val;
+
+            if (!cancelSelection) {
+                // First selection
+                cancelSelection = { element: el, value: val, location: loc };
+                el.classList.add('selected-cancel');
+            } else {
+                // Second selection
+                if (cancelSelection.element === el) {
+                    // Deselect
+                    el.classList.remove('selected-cancel');
+                    cancelSelection = null;
+                } else if (cancelSelection.location !== loc && cancelSelection.value === val) {
+                    // Match found! Cross them out
+                    cancelSelection.element.classList.remove('selected-cancel');
+                    cancelSelection.element.classList.add('crossed-out');
+                    el.classList.add('crossed-out');
+                    cancelSelection = null;
+                    canceledPairs++;
+
+                    if (canceledPairs === pairsToCancel) {
+                        showFinalAnswer();
+                    }
+                } else {
+                    // Invalid match, switch selection
+                    cancelSelection.element.classList.remove('selected-cancel');
+                    cancelSelection = { element: el, value: val, location: loc };
+                    el.classList.add('selected-cancel');
+                }
+            }
+        }
+
+        function showFinalAnswer() {
+            document.getElementById('result-message').innerText = "ખૂબ સરસ! તમને સાચો જવાબ મળી ગયો છે.";
+            document.getElementById('final-equals').classList.remove('hidden');
+            document.getElementById('final-fraction').classList.remove('hidden');
+            score++;
+            document.getElementById('score-display').innerText = `સ્કોર: ${score}`;
+            
+            if (currentQIndex < questions.length - 1) {
+                document.getElementById('next-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('submit-btn').classList.remove('hidden');
+            }
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            document.body.classList.remove('cancel-mode');
+            loadQuestion();
+        }
+
+        function submitGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('score-screen').classList.remove('hidden');
+            document.getElementById('final-score-text').innerText = `${score} / 15`;
+        }
+
+        // Start Game
+        window.onload = initGame;
+    </script>
+</body>
+</html>
